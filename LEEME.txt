@@ -1,0 +1,3 @@
+Sube TODOS estos archivos sueltos a GitHub (sin carpetas).
+index.html es la portada.
+No subas Excel, Word ni Codigo.gs.

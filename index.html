@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a1518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LITPA">
+  <title>LITPA</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="wrap" id="app" hidden>
+    <header class="topbar">
+      <a class="logo-link" href="index.html" title="Ir al inicio">
+        <img class="logo-marca" src="Logo.png" alt="LITPA, ir al inicio">
+      </a>
+      <div>
+        <h1>LITPA</h1>
+        <p>Elige un portafolio para continuar</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-gold btn-instalar" type="button" data-instalar>Añadir al escritorio o pantalla de inicio</button>
+      </div>
+    </header>
+
+    <nav class="puerta">
+      <a href="maestro.html">
+        <div>
+          <p class="kicker">Portafolio 1</p>
+          <h2>Maestro</h2>
+          <p class="intro">Busca tu nombre e ingresa al panel de clase.</p>
+        </div>
+        <span class="btn btn-maroon">Entrar</span>
+      </a>
+      <a href="tablero.html">
+        <div>
+          <p class="kicker">Portafolio 2</p>
+          <h2>Tablero</h2>
+          <p class="intro">Ve todos los registros en vivo, cada 5 segundos.</p>
+        </div>
+        <span class="btn btn-gold">Ver tablero</span>
+      </a>
+      <a href="horario.html">
+        <div>
+          <p class="kicker">Portafolio 3</p>
+          <h2>Horario</h2>
+          <p class="intro">Hora, materia, maestro y grado, según la base general.</p>
+        </div>
+        <span class="btn btn-maroon">Ver horario</span>
+      </a>
+    </nav>
+    <p class="pie-admin">
+      <a href="administracion.html">Administración</a>
+      ·
+      <a href="pantalla.html">Pantalla de horario</a>
+    </p>
+  </div>
+
+  <script src="splash.js"></script>
+  <script src="install.js"></script>
+  <script>
+    LITPA_SPLASH.show({
+      titulo: "LITPA",
+      subtitulo: "Liceo Tecnológico Profesional de Palencia"
+    }).then(function () {
+      document.getElementById("app").hidden = false;
+    });
+  </script>
+</body>
+</html>

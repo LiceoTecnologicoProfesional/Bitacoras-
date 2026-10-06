@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a1518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LITPA Panel">
+  <title>LITPA · Panel de clase</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="wrap wrap-ancho" id="app" hidden>
+    <header class="topbar">
+      <a class="logo-link" href="index.html" title="Ir al inicio">
+        <img class="logo-marca" src="Logo.png" alt="LITPA, ir al inicio">
+      </a>
+      <div>
+        <h1>Panel de clase</h1>
+        <p>Bitácora, horario y justificaciones</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-ghost" href="maestro.html" id="salir-maestro">Cambiar maestro</a>
+        <a class="btn btn-ghost" href="tablero.html">Tablero</a>
+      </div>
+    </header>
+
+    <main class="panel">
+      <div class="panel-body">
+        <div class="meta-hora">
+          <div class="pill"><span>Maestro</span><strong id="nombre-activo">—</strong></div>
+          <div class="pill"><span>Fecha</span><strong id="fecha-auto">—</strong></div>
+          <div class="pill"><span>Materia</span><strong id="materia-activa">—</strong></div>
+          <div class="pill"><span>Curso</span><strong id="curso-activo">—</strong></div>
+          <div class="pill"><span>Horario</span><strong id="horario-activo">—</strong></div>
+          <div class="pill"><span>Entrada al panel</span><strong id="hora-entrada">—</strong></div>
+          <div class="pill"><span>Hora actual</span><strong id="hora-ahora" class="reloj-vivo">—</strong></div>
+        </div>
+
+        <div class="pestanas" role="tablist">
+          <button class="pestana activa" type="button" data-tab="bitacora" aria-selected="true">Bitácora</button>
+          <button class="pestana" type="button" data-tab="horario" aria-selected="false">Horario</button>
+        </div>
+
+        <section id="tab-bitacora">
+          <div id="aviso-envio"></div>
+          <div id="caja-espera" class="caja-estado">Cargando tu horario...</div>
+
+          <form id="form-clase" hidden>
+            <div class="grid">
+              <div class="campo">
+                <label for="curso">Curso</label>
+                <div class="campo-con-mic">
+                  <input type="text" id="curso" name="curso" required placeholder="Ej. 2.° A" autocomplete="off">
+                  <button class="btn btn-maroon btn-mic-campo" type="button" data-mic="curso" title="Dictar curso" aria-label="Dictar curso"></button>
+                </div>
+              </div>
+              <div class="campo">
+                <label for="maestro-form">Maestro</label>
+                <input type="text" id="maestro-form" name="maestro" readonly>
+              </div>
+              <div class="campo completo">
+                <label for="tema">Tema</label>
+                <div class="campo-con-mic">
+                  <input type="text" id="tema" name="tema" required placeholder="Tema de la clase">
+                  <button class="btn btn-maroon btn-mic-campo" type="button" data-mic="tema" title="Dictar tema" aria-label="Dictar tema"></button>
+                </div>
+              </div>
+              <div class="campo completo">
+                <label for="actividad">Actividad</label>
+                <div class="campo-con-mic">
+                  <input type="text" id="actividad" name="actividad" placeholder="Actividad realizada">
+                  <button class="btn btn-maroon btn-mic-campo" type="button" data-mic="actividad" title="Dictar actividad" aria-label="Dictar actividad"></button>
+                </div>
+              </div>
+              <div class="campo completo">
+                <label for="tarea">Tarea</label>
+                <div class="campo-con-mic">
+                  <input type="text" id="tarea" name="tarea" placeholder="Tarea asignada">
+                  <button class="btn btn-maroon btn-mic-campo" type="button" data-mic="tarea" title="Dictar tarea" aria-label="Dictar tarea"></button>
+                </div>
+              </div>
+              <div class="campo completo">
+                <label>Tipo de incidente</label>
+                <div class="chips">
+                  <button class="chip" type="button" data-tipo="No entrega">No entrega</button>
+                  <button class="chip" type="button" data-tipo="No se presentó">No se presentó</button>
+                </div>
+              </div>
+              <div class="campo completo">
+                <label for="incidente">Descripción del incidente</label>
+                <div class="incidente-box">
+                  <textarea id="incidente" name="incidente" placeholder="Escríbelo o dicta con el micrófono."></textarea>
+                  <button class="btn btn-maroon btn-mic-campo" type="button" data-mic="incidente" title="Dictar incidente" aria-label="Dictar incidente"></button>
+                </div>
+              </div>
+            </div>
+            <div class="barra-envio">
+              <button class="btn btn-maroon" type="submit" id="btn-enviar">Enviar registro</button>
+            </div>
+          </form>
+
+          <section class="caja-reporte" id="caja-reporte" hidden>
+            <button class="btn btn-maroon" type="button" id="btn-abrir-reporte">Añadir reporte</button>
+            <div class="caja-descarga-reporte" id="caja-descarga-reporte" hidden>
+              <p>El reporte se envió a administración.</p>
+              <div class="acciones" style="justify-content:flex-start;margin-top:8px">
+                <button class="btn btn-gold" type="button" id="btn-descargar-reporte">¿Desea descargar?</button>
+              </div>
+            </div>
+            <form id="form-reporte" class="hoja-reporte" hidden>
+              <div class="marca-agua" aria-hidden="true">LICEO TECNOLÓGICO</div>
+              <div class="cd-contenido">
+                <div class="cd-head">
+                  <img src="Logo.png" alt="LITPA">
+                  <h2>CONTROL DISCIPLINARIO</h2>
+                </div>
+                <p class="cd-intro">Señores padres de familia y/o encargado(a) le informamos que su hijo(a)
+                  <input type="text" id="rep-alumno" class="cd-u" required placeholder="nombre" autocomplete="off">
+                  de <input type="text" id="rep-grado" class="cd-u corto" required placeholder="grado"> grado</p>
+                <p class="cd-intro">El día
+                  <input type="text" id="rep-fecha" class="cd-u corto" required placeholder="fecha">
+                  infringió el reglamento y normas internas del establecimiento según falta a continuación indicada:</p>
+
+                <label class="cd-row"><span class="cd-txt">Se presentó tarde a clase <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="tarde"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">No presentó útiles <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="utiles"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">No presentó tarea <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="tarea"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">Permaneció fuera de clase <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="fuera"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">Faltó el respeto a: <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="respeto"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">Portó instrumentos prohibidos <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="instrumentos"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">Se presentó con uniforme incompleto <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="uniforme"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">Mal vocabulario en clase <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="vocabulario"><i></i></span></label>
+                <label class="cd-row"><span class="cd-txt">Agresión física a: <i class="cd-dots"></i></span><span class="cd-check"><input type="checkbox" name="rep-falta" value="agresion"><i></i></span></label>
+                <div class="cd-row cd-otra">
+                  <div class="cd-txt">
+                    <label class="cd-otra-lab" for="rep-otra">Otra falta cometida:</label>
+                    <textarea id="rep-otra" rows="3" placeholder="Describe aquí la falta"></textarea>
+                  </div>
+                  <label class="cd-check"><input type="checkbox" name="rep-falta" value="otra" id="rep-falta-otra"><i></i></label>
+                </div>
+
+                <div class="cd-firmas">
+                  <div>
+                    <input type="text" id="rep-maestro-firma" class="cd-u" readonly>
+                    <span>Maestro(a) que reporta</span>
+                  </div>
+                  <div>
+                    <input type="text" id="rep-encargado" class="cd-u" placeholder="Firma / nombre">
+                    <span>padre de familia y/o Encargado</span>
+                    <input type="tel" id="rep-telefono" class="cd-u" placeholder="Número" inputmode="tel" autocomplete="tel">
+                    <span>Teléfono</span>
+                  </div>
+                </div>
+              </div>
+              <div class="barra-envio">
+                <button class="btn btn-maroon" type="submit" id="btn-enviar-reporte">Enviar reporte</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="caja-pendiente" id="caja-justificaciones" hidden>
+            <h2 class="titulo-seccion" style="margin-top:0">Justificación pendiente</h2>
+            <p class="intro">Hay clases de hoy que no se llenaron a tiempo. Justifícalas aquí. Si no lo haces hoy, mañana ya no aparecerán en este panel y quedarán en administración como “Sin justificación”.</p>
+            <div class="lista-pendientes" id="lista-pendientes"></div>
+            <form id="form-justificacion">
+              <div class="campo">
+                <label for="justificacion">Motivo</label>
+                <div class="campo-con-mic">
+                  <textarea id="justificacion" placeholder="Explica por qué no se llenó la bitácora a tiempo."></textarea>
+                  <button class="btn btn-maroon btn-mic-campo" type="button" data-mic="justificacion" title="Dictar justificación" aria-label="Dictar justificación"></button>
+                </div>
+              </div>
+              <div class="barra-envio">
+                <button class="btn btn-maroon" type="submit" id="btn-justificar">Enviar justificación</button>
+              </div>
+            </form>
+          </section>
+          <p class="estado-mic" id="estado-mic">Pulsa el micrófono para dictar. Vuelve a pulsarlo para detener. Funciona mejor en Chrome o Edge.</p>
+
+          <section id="caja-clave-maestro">
+            <h3 class="titulo-seccion">Tu contraseña</h3>
+            <p class="intro" id="texto-clave-maestro">Puedes cambiar tu contraseña una sola vez.</p>
+            <div id="aviso-clave-maestro"></div>
+            <form id="form-clave-maestro">
+              <div class="grid">
+                <div class="campo">
+                  <label for="clave-actual-maestro">Contraseña actual</label>
+                  <input type="password" id="clave-actual-maestro" required autocomplete="current-password">
+                </div>
+                <div class="campo">
+                  <label for="clave-nueva-maestro">Nueva contraseña</label>
+                  <input type="password" id="clave-nueva-maestro" required minlength="4" autocomplete="new-password">
+                </div>
+              </div>
+              <div class="acciones" style="justify-content:flex-start">
+                <button class="btn btn-maroon" type="submit">Cambiar contraseña</button>
+              </div>
+            </form>
+          </section>
+        </section>
+
+        <section id="tab-horario" hidden>
+          <p class="intro">Horario general: básico, sábado y primaria. Solo queda abierto el día de hoy. Tus clases aparecen resaltadas.</p>
+          <div id="vista-horario-panel">
+            <div class="skeleton"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <p class="pie">LITPA · La bitácora solo se llena dentro del horario asignado</p>
+    <p class="pie-admin"><a href="administracion.html">Administración</a></p>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="config.local.js"></script>
+  <script src="api.js"></script>
+  <script src="util.js"></script>
+  <script src="plantilla-horarios.js"></script>
+  <script src="plantilla-maestros.js"></script>
+  <script src="reporte.js"></script>
+  <script src="splash.js"></script>
+  <script src="install.js"></script>
+  <script>
+    (function () {
+      const CLAVE = LITPA_UTIL.CLAVE_MAESTRO;
+      const SESION = LITPA_UTIL.CLAVE_SESION_MAESTRO;
+      const tiposElegidos = new Set();
+      let sucio = false;
+      let estado = null;
+      let teniaSlot = false;
+      let pendienteElegida = null;
+      let horarioCargado = false;
+      let ultimoReporte = null;
+
+      const $ = (id) => document.getElementById(id);
+      const maestro = (localStorage.getItem(CLAVE) || "").trim();
+      if (!maestro || sessionStorage.getItem(SESION) !== maestro) {
+        window.location.replace("maestro.html");
+        return;
+      }
+
+      let horaEntrada = sessionStorage.getItem("litpa_hora_entrada") || LITPA_UTIL.horaActual();
+      sessionStorage.setItem("litpa_hora_entrada", horaEntrada);
+
+      $("nombre-activo").textContent = maestro;
+      $("maestro-form").value = maestro;
+      $("fecha-auto").textContent = LITPA_UTIL.fechaActual();
+      $("hora-entrada").textContent = horaEntrada;
+      $("curso").value = localStorage.getItem(LITPA_UTIL.CLAVE_CURSO) || "";
+
+      let proximoHasta = null;
+      let pidiendoRefresh = false;
+      let yaPidioPorConteo = "";
+
+      document.querySelectorAll("[data-mic]").forEach(function (btn) {
+        LITPA_DICTADO.enlazar(btn, $(btn.getAttribute("data-mic")));
+      });
+
+      document.querySelectorAll(".pestana").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const tab = btn.getAttribute("data-tab");
+          document.querySelectorAll(".pestana").forEach(function (b) {
+            const on = b === btn;
+            b.classList.toggle("activa", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          $("tab-bitacora").hidden = tab !== "bitacora";
+          $("tab-horario").hidden = tab !== "horario";
+          if (tab === "horario") cargarHorario();
+        });
+      });
+
+      function parseHoraHoy(txt) {
+        const m = String(txt || "").match(/(\d{1,2}):(\d{2})/);
+        if (!m) return null;
+        const d = new Date();
+        d.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+        return d;
+      }
+
+      function textoFaltaHasta(txt) {
+        const dest = parseHoraHoy(txt);
+        if (!dest) return { texto: "", listo: false };
+        const ms = dest.getTime() - Date.now();
+        if (ms <= 0) return { texto: "Ya inicia tu siguiente clase. Actualizando...", listo: true };
+        const total = Math.floor(ms / 1000);
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        const partes = [];
+        if (h) partes.push(h === 1 ? "1 hora" : h + " horas");
+        if (m || h) partes.push(m === 1 ? "1 minuto" : m + " minutos");
+        partes.push(s === 1 ? "1 segundo" : s + " segundos");
+        return { texto: "Faltan " + partes.join(" y "), listo: false };
+      }
+
+      function actualizarConteo() {
+        const el = $("conteo-espera");
+        if (!el || !proximoHasta) return;
+        const info = textoFaltaHasta(proximoHasta);
+        el.textContent = info.texto;
+        if (info.listo && !pidiendoRefresh && yaPidioPorConteo !== proximoHasta) {
+          yaPidioPorConteo = proximoHasta;
+          refrescarEstado();
+        }
+      }
+
+      function pintarEspera(html, next) {
+        const espera = $("caja-espera");
+        espera.hidden = false;
+        espera.innerHTML = html;
+        const nuevo = next && (next.horaInicio || next.etiqueta)
+          ? String(next.horaInicio || next.etiqueta).trim()
+          : null;
+        if (nuevo !== proximoHasta) yaPidioPorConteo = "";
+        proximoHasta = nuevo;
+        actualizarConteo();
+      }
+
+      function bloqueSiguiente(next) {
+        if (!next) return "";
+        return '<p class="clase-siguiente">Siguiente clase: ' +
+          LITPA_UTIL.escapeHtml(next.materia) +
+          (next.grado ? " · " + LITPA_UTIL.escapeHtml(next.grado) : "") +
+          " · " +
+          LITPA_UTIL.escapeHtml(next.etiqueta) + "</p>" +
+          '<div class="conteo-espera" id="conteo-espera"></div>';
+      }
+
+      function claveSlot(s) {
+        return s ? String(s.materia || "") + "|" + String(s.grado || "") + "|" + String(s.etiqueta || "") : "";
+      }
+
+      function pendientesDe(data) {
+        const lista = (data && data.pendientesJustificacion) || [];
+        if (lista.length) return lista;
+        return data && data.pendienteJustificacion ? [data.pendienteJustificacion] : [];
+      }
+
+      function pintarPendientes(lista) {
+        const caja = $("caja-justificaciones");
+        const box = $("lista-pendientes");
+        if (!lista.length) {
+          caja.hidden = true;
+          pendienteElegida = null;
+          return;
+        }
+        caja.hidden = false;
+        if (!pendienteElegida || !lista.some(function (p) { return claveSlot(p) === claveSlot(pendienteElegida); })) {
+          pendienteElegida = lista[0];
+        }
+        box.innerHTML = lista.map(function (p) {
+          const on = claveSlot(p) === claveSlot(pendienteElegida);
+          return '<button class="chip chip-pendiente' + (on ? " activa" : "") + '" type="button" data-pend="' +
+            LITPA_UTIL.escapeHtml(claveSlot(p)) + '">' +
+            LITPA_UTIL.escapeHtml(p.materia) +
+            (p.grado ? " · " + LITPA_UTIL.escapeHtml(p.grado) : "") +
+            " · " + LITPA_UTIL.escapeHtml(p.etiqueta) +
+            "</button>";
+        }).join("");
+        box.querySelectorAll("[data-pend]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            const clave = btn.getAttribute("data-pend");
+            pendienteElegida = lista.filter(function (p) { return claveSlot(p) === clave; })[0] || lista[0];
+            pintarPendientes(lista);
+          });
+        });
+      }
+
+      function aplicarCursoDeSlot(slot) {
+        const input = $("curso");
+        const pill = $("curso-activo");
+        const g = slot && String(slot.grado || "").trim();
+        if (pill) pill.textContent = g || (input && input.value) || "—";
+        if (!g || !input) return;
+        input.value = g;
+        input.setAttribute("data-grado-auto", g);
+      }
+
+      function pintarCajaClave(yaCambio) {
+        const form = $("form-clave-maestro");
+        const texto = $("texto-clave-maestro");
+        if (!form || !texto) return;
+        if (yaCambio) {
+          form.hidden = true;
+          texto.textContent = "Ya usaste tu único cambio de contraseña.";
+        } else {
+          form.hidden = false;
+          texto.textContent = "Puedes cambiar tu contraseña una sola vez.";
+        }
+      }
+
+      function aplicarEstado(data) {
+        estado = data;
+        const slot = data.slotActual;
+        const next = data.proximoSlot;
+        const pendientes = pendientesDe(data);
+        const form = $("form-clase");
+        const espera = $("caja-espera");
+
+        pintarPendientes(pendientes);
+        pintarCajaClave(data.claveCambiada);
+
+        const cajaRep = $("caja-reporte");
+        if (slot) {
+          cajaRep.hidden = false;
+          if (!$("rep-fecha").value) $("rep-fecha").value = LITPA_UTIL.fechaActual();
+          if (slot.grado) $("rep-grado").value = slot.grado;
+        } else {
+          cajaRep.hidden = true;
+          $("form-reporte").hidden = true;
+        }
+
+        if (slot && !slot.llenado) {
+          $("materia-activa").textContent = slot.materia;
+          $("horario-activo").textContent = slot.etiqueta;
+          aplicarCursoDeSlot(slot);
+          form.hidden = false;
+          espera.hidden = true;
+          proximoHasta = null;
+          if (!teniaSlot) LITPA_UTIL.mostrarAviso($("aviso-envio"), "", "");
+          teniaSlot = true;
+          return;
+        }
+
+        form.hidden = true;
+
+        if (slot && slot.llenado) {
+          $("materia-activa").textContent = slot.materia;
+          $("horario-activo").textContent = slot.etiqueta;
+          aplicarCursoDeSlot(slot);
+          teniaSlot = true;
+          pintarEspera(
+            "<strong>Ya llenaste esta bitácora</strong>No puedes enviarla de nuevo. Espere su siguiente clase." +
+            (next ? bloqueSiguiente(next) : "<p class=\"clase-siguiente\">Hoy ya no tienes otra clase.</p>"),
+            next
+          );
+          return;
+        }
+
+        if (teniaSlot && pendientes.length) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), "El horario de esa materia ya cerró. La bitácora no se puede llenar; abajo puedes enviar la justificación pendiente.", "error");
+        }
+        teniaSlot = false;
+        proximoHasta = null;
+
+        $("materia-activa").textContent = pendientes[0] ? pendientes[0].materia : (next ? next.materia : "—");
+        $("horario-activo").textContent = pendientes[0] ? pendientes[0].etiqueta : (next ? next.etiqueta : "—");
+        aplicarCursoDeSlot(pendientes[0] || next);
+
+        if (pendientes.length && !next) {
+          pintarEspera("<strong>Fuera de horario</strong>Ya no se puede llenar la bitácora. Abajo está la justificación pendiente de hoy.", null);
+        } else if (data.noAsistio) {
+          pintarEspera("<strong>Inasistencia registrada</strong>Administración marcó que no asististe hoy. No se te pedirán justificaciones.", null);
+        } else if (next) {
+          pintarEspera(
+            "<strong>Aún no es tu horario</strong>Cuando inicie el periodo podrás enviar la bitácora de esa materia." +
+            bloqueSiguiente(next),
+            next
+          );
+        } else if (data.horariosHoy && data.horariosHoy.length) {
+          pintarEspera("<strong>No hay clase en este momento</strong>Hoy ya no tienes un horario abierto para llenar la bitácora.", null);
+        } else {
+          pintarEspera("<strong>Sin horario asignado</strong>Administración aún no te asignó materia y hora para hoy.", null);
+        }
+      }
+
+      async function refrescarEstado() {
+        const espera = $("caja-espera");
+        if (!LITPA.configurado()) {
+          $("form-clase").hidden = true;
+          $("caja-justificaciones").hidden = true;
+          espera.hidden = false;
+          espera.innerHTML = "<strong>Sin conexión</strong>Google Sheets aún no está conectado.";
+          return;
+        }
+        if (pidiendoRefresh) return;
+        pidiendoRefresh = true;
+        try {
+          var data;
+          try {
+            data = await LITPA.estadoPanel(maestro, true);
+          } catch (err) {
+            if (String(err.message || "").indexOf("no está registrado") >= 0) {
+              localStorage.removeItem(CLAVE);
+              window.location.replace("maestro.html");
+              return;
+            }
+            data = { ok: true, maestro: maestro };
+          }
+          aplicarEstado(LITPA_UTIL.completarEstadoPanel(data, maestro));
+        } catch (err) {
+          espera.hidden = false;
+          espera.innerHTML = "<strong>No se pudo leer el horario</strong>" + LITPA_UTIL.escapeHtml(err.message || "");
+        } finally {
+          pidiendoRefresh = false;
+        }
+      }
+
+      async function cargarHorario() {
+        const caja = $("vista-horario-panel");
+        if (!LITPA.configurado()) {
+          caja.innerHTML = '<div class="caja-estado"><strong>Sin conexión</strong>Google Sheets aún no está conectado.</div>';
+          return;
+        }
+        try {
+          const lista = await LITPA.obtenerHorarios(!horarioCargado);
+          horarioCargado = true;
+          LITPA_UTIL.pintarHorarioGeneral(caja, lista, {
+            maestro: maestro,
+            diaHoy: estado && estado.dia
+          });
+        } catch (err) {
+          caja.innerHTML = '<div class="caja-estado"><strong>No se pudo leer el horario</strong>' +
+            LITPA_UTIL.escapeHtml(err.message || "") + "</div>";
+        }
+      }
+
+      LITPA_SPLASH.show({
+        titulo: "Bienvenido/a",
+        subtitulo: maestro,
+        duration: 1400,
+        until: refrescarEstado()
+      }).then(function () {
+        document.getElementById("app").hidden = false;
+      });
+
+      function tick() {
+        $("hora-ahora").textContent = LITPA_UTIL.horaActual();
+        actualizarConteo();
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      $("form-clase").addEventListener("input", () => { sucio = true; });
+      $("justificacion").addEventListener("input", () => { sucio = true; });
+
+      document.querySelectorAll(".chip").forEach((chip) => {
+        if (chip.classList.contains("chip-pendiente")) return;
+        chip.addEventListener("click", () => {
+          const tipo = chip.dataset.tipo;
+          if (!tipo) return;
+          if (tiposElegidos.has(tipo)) tiposElegidos.delete(tipo);
+          else tiposElegidos.add(tipo);
+          chip.classList.toggle("activa");
+          sucio = true;
+        });
+      });
+
+      window.addEventListener("beforeunload", (ev) => {
+        if (!sucio) return;
+        ev.preventDefault();
+        ev.returnValue = "";
+      });
+
+      $("form-clase").addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        if (!LITPA.configurado()) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), "Google Sheets aún no está conectado.", "error");
+          return;
+        }
+        if (LITPA_DICTADO.detener) LITPA_DICTADO.detener();
+
+        const slot = estado && estado.slotActual;
+        const payload = {
+          fecha: LITPA_UTIL.fechaActual(),
+          horaEntrada: horaEntrada || LITPA_UTIL.horaActual(),
+          horaEnvio: LITPA_UTIL.horaActual(),
+          curso: $("curso").value.trim(),
+          maestro: maestro,
+          tema: $("tema").value.trim(),
+          actividad: $("actividad").value.trim(),
+          tarea: $("tarea").value.trim(),
+          tipoIncidente: Array.from(tiposElegidos).join(", "),
+          incidente: $("incidente").value.trim(),
+          materia: slot ? slot.materia : "",
+          horaInicio: slot ? slot.horaInicio : "",
+          horaFin: slot ? slot.horaFin : "",
+          grado: slot ? slot.grado : "",
+          horario: slot ? slot.etiqueta : ""
+        };
+
+        const boton = $("btn-enviar");
+        boton.disabled = true;
+        boton.textContent = "Enviando...";
+        try {
+          const res = await LITPA.guardarRegistro(payload);
+          if (!res.ok) throw new Error(res.error || "No se pudo guardar.");
+          sucio = false;
+          localStorage.setItem(LITPA_UTIL.CLAVE_CURSO, payload.curso);
+          LITPA_UTIL.mostrarAviso(
+            $("aviso-envio"),
+            "Registro enviado a la hoja de " + LITPA_UTIL.escapeHtml(maestro) + ". Entrada: " + payload.horaEntrada + " · Envío: " + payload.horaEnvio + ".",
+            "ok"
+          );
+          $("tema").value = "";
+          $("actividad").value = "";
+          $("tarea").value = "";
+          $("incidente").value = "";
+          tiposElegidos.clear();
+          document.querySelectorAll("#form-clase .chip").forEach((c) => c.classList.remove("activa"));
+          horaEntrada = LITPA_UTIL.horaActual();
+          sessionStorage.setItem("litpa_hora_entrada", horaEntrada);
+          $("hora-entrada").textContent = horaEntrada;
+          await refrescarEstado();
+          if (!$("form-clase").hidden) $("tema").focus();
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), err.message, "error");
+          await refrescarEstado();
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "Enviar registro";
+        }
+      });
+
+      $("btn-abrir-reporte").addEventListener("click", function () {
+        const form = $("form-reporte");
+        form.hidden = !form.hidden;
+        if (!form.hidden) {
+          if (!$("rep-fecha").value) $("rep-fecha").value = LITPA_UTIL.fechaActual();
+          const slot = estado && estado.slotActual;
+          if (slot && slot.grado && !$("rep-grado").value) $("rep-grado").value = slot.grado;
+          $("rep-maestro-firma").value = maestro;
+          $("rep-alumno").focus();
+        }
+      });
+
+      $("rep-otra").addEventListener("input", function () {
+        if (this.value.replace(/\s+/g, " ").trim()) $("rep-falta-otra").checked = true;
+      });
+
+      $("btn-descargar-reporte").addEventListener("click", function () {
+        if (ultimoReporte) LITPA_REPORTE.descargar(ultimoReporte, this);
+      });
+
+      $("form-reporte").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        if (!LITPA.configurado()) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), "Google Sheets aún no está conectado.", "error");
+          return;
+        }
+        const slot = estado && estado.slotActual;
+        const ids = Array.from(document.querySelectorAll("input[name='rep-falta']:checked")).map(function (el) {
+          return el.value;
+        });
+        const respeto = "";
+        const agresion = "";
+        const otra = $("rep-otra").value.replace(/\s+/g, " ").trim();
+        if (respeto && ids.indexOf("respeto") < 0) ids.push("respeto");
+        if (agresion && ids.indexOf("agresion") < 0) ids.push("agresion");
+        if (otra && ids.indexOf("otra") < 0) ids.push("otra");
+        const etiquetas = (LITPA_REPORTE.faltas || []).filter(function (f) {
+          return ids.indexOf(f.id) >= 0;
+        }).map(function (f) { return f.label.replace(":", ""); });
+        const extras = [];
+        if (respeto) extras.push("Faltó el respeto a: " + respeto);
+        if (agresion) extras.push("Agresión física a: " + agresion);
+        if (otra) extras.push("Otra falta cometida: " + otra);
+        if (!ids.length) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), "Marca al menos una falta.", "error");
+          return;
+        }
+        const payload = {
+          fecha: LITPA_UTIL.fechaActual(),
+          maestro: maestro,
+          materia: slot ? slot.materia : "",
+          horario: slot ? slot.etiqueta : "",
+          curso: $("curso").value.trim() || (slot && slot.grado) || "",
+          alumno: $("rep-alumno").value.replace(/\s+/g, " ").trim(),
+          grado: $("rep-grado").value.replace(/\s+/g, " ").trim(),
+          fechaFalta: $("rep-fecha").value.replace(/\s+/g, " ").trim(),
+          tipo: etiquetas.join(" · "),
+          motivo: extras.join(" | ") || etiquetas.join(" · "),
+          observaciones: JSON.stringify({
+            faltas: ids,
+            respeto: respeto,
+            agresion: agresion,
+            otra: otra,
+            telefono: $("rep-telefono").value.replace(/\s+/g, " ").trim()
+          }),
+          encargado: $("rep-encargado").value.replace(/\s+/g, " ").trim(),
+          telefono: $("rep-telefono").value.replace(/\s+/g, " ").trim()
+        };
+        const boton = $("btn-enviar-reporte");
+        boton.disabled = true;
+        boton.textContent = "Enviando...";
+        try {
+          const res = await LITPA.guardarReporte(payload);
+          if (!res.ok) throw new Error(res.error || "No se pudo guardar el reporte.");
+          sucio = false;
+          ultimoReporte = Object.assign({}, payload, res);
+          $("form-reporte").hidden = true;
+          $("form-reporte").reset();
+          $("rep-fecha").value = LITPA_UTIL.fechaActual();
+          $("rep-maestro-firma").value = maestro;
+          $("caja-descarga-reporte").hidden = false;
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), "Reporte enviado. Administración podrá descargarlo en PDF.", "ok");
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), err.message, "error");
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "Enviar reporte";
+        }
+      });
+
+      $("form-justificacion").addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const texto = $("justificacion").value.replace(/\s+/g, " ").trim();
+        if (!texto) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), "Escribe la justificación.", "error");
+          return;
+        }
+        const pendiente = pendienteElegida || (pendientesDe(estado)[0] || null);
+        const boton = $("btn-justificar");
+        boton.disabled = true;
+        boton.textContent = "Enviando...";
+        if (LITPA_DICTADO.detener) LITPA_DICTADO.detener();
+        try {
+          const res = await LITPA.guardarMensaje({
+            maestro: maestro,
+            texto: texto,
+            materia: pendiente ? pendiente.materia : "",
+            horario: pendiente ? pendiente.etiqueta : ""
+          });
+          if (!res.ok) throw new Error(res.error || "No se pudo enviar.");
+          sucio = false;
+          $("justificacion").value = "";
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), "Justificación enviada a administración.", "ok");
+          await refrescarEstado();
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso($("aviso-envio"), err.message, "error");
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "Enviar justificación";
+        }
+      });
+
+      $("form-clave-maestro").addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const actual = $("clave-actual-maestro").value;
+        const nueva = $("clave-nueva-maestro").value;
+        const boton = ev.target.querySelector("button[type=submit]");
+        boton.disabled = true;
+        try {
+          const res = await LITPA.cambiarClaveMaestro(maestro, actual, nueva);
+          if (!res || !res.ok) throw new Error((res && res.error) || "No se pudo guardar.");
+          LITPA_UTIL.mostrarAviso($("aviso-clave-maestro"), "Contraseña guardada.", "ok");
+          ev.target.reset();
+          pintarCajaClave(true);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso($("aviso-clave-maestro"), err.message, "error");
+        } finally {
+          boton.disabled = false;
+        }
+      });
+
+      $("salir-maestro").addEventListener("click", function () {
+        sessionStorage.removeItem(SESION);
+      });
+
+      const prevEstado = LITPA.peek("estadoPanel", { maestro: maestro });
+      if (prevEstado && prevEstado.ok) aplicarEstado(LITPA_UTIL.completarEstadoPanel(prevEstado, maestro));
+      setInterval(refrescarEstado, 15000);
+    })();
+  </script>
+</body>
+</html>

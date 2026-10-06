@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a1518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LITPA Maestro">
+  <title>LITPA · Ingreso del maestro</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="wrap" id="app" hidden>
+    <header class="topbar">
+      <a class="logo-link" href="index.html" title="Ir al inicio">
+        <img class="logo-marca" src="Logo.png" alt="LITPA, ir al inicio">
+      </a>
+      <div>
+        <h1>Ingreso del maestro</h1>
+        <p>Elige tu nombre para entrar al panel</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-ghost" href="tablero.html">Tablero</a>
+      </div>
+    </header>
+
+    <div class="layout-ingreso" id="caja-lista">
+      <section class="hero-ingreso">
+        <img src="Logo.png" alt="LITPA">
+        <p class="kicker">Portafolio 1</p>
+        <h2>Bienvenido a LITPA</h2>
+        <p>Solo pueden entrar los maestros ya registrados por administración. Busca tu nombre y pulsa para continuar.</p>
+      </section>
+
+      <main class="panel">
+        <div class="panel-body">
+          <div id="aviso-config"></div>
+          <p class="intro">Escribe tu nombre para encontrarlo en la lista. Si no aparece, pide a administración que te den de alta.</p>
+
+          <form id="form-buscar">
+            <div class="campo">
+              <label for="buscar-maestro">Buscar mi nombre</label>
+              <input type="text" id="buscar-maestro" name="buscar-maestro" placeholder="Nombre completo" autocomplete="username" enterkeyhint="search">
+            </div>
+            <div class="acciones">
+              <button class="btn btn-maroon btn-ancho" type="submit" id="btn-buscar">Continuar</button>
+            </div>
+          </form>
+
+          <h3 class="titulo-seccion">Maestros registrados</h3>
+          <div class="lista-maestros" id="lista-maestros">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <section class="panel login-admin" id="caja-login-maestro" hidden>
+      <div class="panel-body">
+        <p class="kicker" id="login-nombre"></p>
+        <h2 class="titulo-seccion" style="margin-top:0">Ingresa la contraseña</h2>
+        <div id="aviso-login"></div>
+        <form id="form-login-maestro">
+          <div class="campo">
+            <label for="clave-maestro">Contraseña</label>
+            <input type="password" id="clave-maestro" required autocomplete="current-password">
+          </div>
+          <div class="acciones">
+            <button class="btn btn-maroon btn-ancho" type="submit" id="btn-ingresar">Entrar</button>
+            <button class="btn btn-ghost oscuro btn-ancho" type="button" id="btn-volver">Volver</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <p class="pie">LITPA · El alta de maestros se hace en Administración</p>
+    <p class="pie-admin"><a href="administracion.html">Administración</a></p>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="config.local.js"></script>
+  <script src="api.js"></script>
+  <script src="util.js"></script>
+  <script src="splash.js"></script>
+  <script src="install.js"></script>
+  <script>
+    (function () {
+      const CLAVE = LITPA_UTIL.CLAVE_MAESTRO;
+      const SESION = LITPA_UTIL.CLAVE_SESION_MAESTRO;
+      const $ = (id) => document.getElementById(id);
+      const aviso = $("aviso-config");
+      const avisoLogin = $("aviso-login");
+      let maestrosCache = [];
+      let maestroElegido = "";
+
+      function inicial(nombre) {
+        return (nombre || "?").trim().charAt(0).toUpperCase();
+      }
+
+      function coincidencias(filtro) {
+        const q = String(filtro || "").trim().toLowerCase();
+        return maestrosCache.filter((m) => !q || m.nombre.toLowerCase().indexOf(q) >= 0);
+      }
+
+      function mostrarLogin(nombre) {
+        maestroElegido = nombre;
+        $("caja-lista").hidden = true;
+        $("caja-login-maestro").hidden = false;
+        $("login-nombre").textContent = nombre;
+        $("clave-maestro").value = "";
+        LITPA_UTIL.mostrarAviso(avisoLogin, "", "");
+        setTimeout(function () {
+          $("clave-maestro").focus();
+        }, 80);
+      }
+
+      function mostrarLista() {
+        maestroElegido = "";
+        $("caja-login-maestro").hidden = true;
+        $("caja-lista").hidden = false;
+        $("clave-maestro").value = "";
+        LITPA_UTIL.mostrarAviso(avisoLogin, "", "");
+        $("buscar-maestro").focus();
+      }
+
+      async function entrar() {
+        const nombre = maestroElegido;
+        const clave = ($("clave-maestro").value || "").trim();
+        if (!nombre) {
+          mostrarLista();
+          return;
+        }
+        if (!clave) {
+          LITPA_UTIL.mostrarAviso(avisoLogin, "Escribe tu contraseña.", "error");
+          $("clave-maestro").focus();
+          return;
+        }
+        const btn = $("btn-ingresar");
+        btn.disabled = true;
+        try {
+          const res = await LITPA.verificarMaestro(nombre, clave);
+          if (!res || !res.ok) {
+            LITPA_UTIL.mostrarAviso(avisoLogin, (res && res.error) || "Contraseña incorrecta.", "error");
+            return;
+          }
+          localStorage.setItem(CLAVE, nombre);
+          sessionStorage.setItem(SESION, nombre);
+          sessionStorage.setItem("litpa_hora_entrada", LITPA_UTIL.horaActual());
+          window.location.href = "maestro-panel.html";
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(avisoLogin, err.message || "No se pudo verificar.", "error");
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function pintarLista(filtro) {
+        const caja = $("lista-maestros");
+        const lista = coincidencias(filtro);
+        if (!maestrosCache.length) {
+          caja.innerHTML = '<p class="vacio">Aún no hay maestros registrados. Administración debe darlos de alta.</p>';
+          return;
+        }
+        if (!lista.length) {
+          caja.innerHTML = '<p class="vacio">Ningún maestro coincide con esa búsqueda.</p>';
+          return;
+        }
+        const actual = (localStorage.getItem(CLAVE) || "").toLowerCase();
+        caja.innerHTML = lista.map((m) => {
+          const elegido = m.nombre.toLowerCase() === actual ? " elegido" : "";
+          return '<button type="button" class="maestro-item' + elegido + '" data-nombre="' +
+            LITPA_UTIL.escapeHtml(m.nombre) + '"><span class="avatar">' + LITPA_UTIL.escapeHtml(inicial(m.nombre)) +
+            "</span><span>" + LITPA_UTIL.escapeHtml(m.nombre) +
+            (m.fechaRegistro ? "<br><small>Desde " + LITPA_UTIL.escapeHtml(LITPA_UTIL.fechaCorta(m.fechaRegistro)) + "</small>" : "") +
+            "</span></button>";
+        }).join("");
+      }
+
+      async function cargarMaestros() {
+        if (!LITPA.configurado()) {
+          $("lista-maestros").innerHTML = '<p class="vacio">Configura la URL de Apps Script para ver la lista.</p>';
+          return;
+        }
+        try {
+          maestrosCache = await LITPA.obtenerMaestros(true);
+          pintarLista($("buscar-maestro").value);
+        } catch (err) {
+          if (!maestrosCache.length) {
+            $("lista-maestros").innerHTML = '<p class="vacio">No se pudo leer la lista de maestros.</p>';
+          }
+        }
+      }
+
+      $("form-buscar").addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        const texto = $("buscar-maestro").value.replace(/\s+/g, " ").trim();
+        if (!texto) {
+          LITPA_UTIL.mostrarAviso(aviso, "Escribe tu nombre o elígelo en la lista.", "error");
+          return;
+        }
+        const lista = coincidencias(texto);
+        const exacto = maestrosCache.find((m) => m.nombre.toLowerCase() === texto.toLowerCase());
+        if (exacto) {
+          mostrarLogin(exacto.nombre);
+          return;
+        }
+        if (lista.length === 1) {
+          mostrarLogin(lista[0].nombre);
+          return;
+        }
+        if (!lista.length) {
+          LITPA_UTIL.mostrarAviso(aviso, "No estás registrado. Pide a administración que te den de alta.", "error");
+          return;
+        }
+        LITPA_UTIL.mostrarAviso(aviso, "Hay varias coincidencias. Elige tu nombre en la lista.", "error");
+        pintarLista(texto);
+      });
+
+      $("form-login-maestro").addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        entrar();
+      });
+
+      $("btn-volver").addEventListener("click", mostrarLista);
+
+      $("buscar-maestro").addEventListener("input", () => pintarLista($("buscar-maestro").value));
+
+      $("lista-maestros").addEventListener("click", (ev) => {
+        const item = ev.target.closest(".maestro-item");
+        if (!item) return;
+        mostrarLogin(item.dataset.nombre);
+      });
+
+      async function iniciar() {
+        const prev = LITPA.peek("maestros");
+        if (prev && prev.maestros && prev.maestros.length) {
+          maestrosCache = prev.maestros;
+          pintarLista($("buscar-maestro").value);
+        }
+        await cargarMaestros();
+      }
+      LITPA_SPLASH.show({
+        titulo: "Maestros",
+        subtitulo: "Elige tu nombre para entrar",
+        duration: 1200,
+        until: iniciar()
+      }).then(function () {
+        document.getElementById("app").hidden = false;
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a1518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LITPA Admin">
+  <title>LITPA · Administración</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <link rel="manifest" href="admin-manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="wrap wrap-ancho" id="app" hidden>
+    <header class="topbar">
+      <a class="logo-link" href="index.html" title="Ir al inicio">
+        <img class="logo-marca" src="Logo.png" alt="LITPA, ir al inicio">
+      </a>
+      <div>
+        <h1>Administración</h1>
+        <p>Horario semanal de básico, sábado y primaria</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-gold btn-instalar" type="button" data-instalar data-app="admin">Añadir Administración a la pantalla de inicio</button>
+        <a class="btn btn-ghost" href="index.html" id="btn-inicio">Inicio</a>
+        <button class="btn btn-cream" type="button" id="btn-salir">Salir</button>
+      </div>
+    </header>
+
+    <section class="panel login-admin" id="caja-login">
+      <div class="panel-body">
+        <p class="kicker">Acceso</p>
+        <h2 class="titulo-seccion" style="margin-top:0" id="login-titulo">Ingresa la contraseña</h2>
+        <div id="aviso-login"></div>
+        <form id="form-login">
+          <div class="campo">
+            <label for="clave">Contraseña</label>
+            <input type="password" id="clave" required autocomplete="current-password">
+          </div>
+          <div class="acciones">
+            <button class="btn btn-maroon btn-ancho btn-entrar" id="btn-entrar" type="submit">Entrar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="caja-panel" hidden>
+      <main class="panel" style="margin-top:16px">
+        <div class="panel-body">
+          <div id="aviso-admin"></div>
+          <p class="intro">Primero registra a los maestros y las materias. Después, en el horario, solo las eliges.</p>
+          <div class="acciones" style="justify-content:flex-start">
+            <a class="btn btn-maroon" href="tablero.html">Tablero en vivo</a>
+            <a class="btn btn-ghost oscuro" href="maestro.html">Ingreso maestros</a>
+          </div>
+        </div>
+      </main>
+
+      <main class="panel">
+        <div class="panel-body">
+          <div id="catalogo-admin">
+            <div class="resumen-acordeon" id="caja-cat-maestros">
+              <button class="resumen-acordeon-btn" type="button">
+                <span class="resumen-acordeon-txt"><strong>Maestros</strong><small>Lista, altas y bajas</small></span>
+                <i class="dia-flecha" aria-hidden="true"></i>
+              </button>
+              <div class="resumen-acordeon-cuerpo" id="vista-maestros">
+            <p class="intro">Agrega o elimina a todos los maestros desde aquí. Solo los que estén en esta lista aparecen para elegirlos en el horario.</p>
+            <form id="form-maestro">
+              <div class="grid">
+                <div class="campo">
+                  <label for="nuevo-maestro">Nombre del maestro</label>
+                  <input type="text" id="nuevo-maestro" name="nuevo-maestro" required placeholder="Ej. Ana López" autocomplete="off">
+                </div>
+              </div>
+              <div class="acciones" style="justify-content:flex-start">
+                <button class="btn btn-maroon" type="submit" id="btn-agregar-maestro">Agregar maestro</button>
+                <button class="btn btn-peligro" type="button" id="btn-eliminar-todos">Eliminar todos</button>
+              </div>
+            </form>
+            <div class="lista-maestros" id="lista-maestros">
+              <div class="skeleton"></div>
+            </div>
+              </div>
+            </div>
+
+            <div class="resumen-acordeon" id="caja-cat-materias">
+              <button class="resumen-acordeon-btn" type="button">
+                <span class="resumen-acordeon-txt"><strong>Materias</strong><small>Lista única para los tres horarios</small></span>
+                <i class="dia-flecha" aria-hidden="true"></i>
+              </button>
+              <div class="resumen-acordeon-cuerpo" id="vista-materias">
+            <p class="intro">Una sola lista para los tres horarios. Pega o deja las materias (una por renglón) y pulsa <strong>Agregar lista</strong>: todas quedan para elegirlas en el horario. Matemática, Inglés y las demás no se duplican aunque vengan de diario, sábado y primaria.</p>
+            <form id="form-materia">
+              <div class="campo">
+                <label for="lista-nueva-materia">Lista de materias</label>
+                <textarea id="lista-nueva-materia" name="lista-nueva-materia" rows="8" required autocomplete="off" placeholder="Una materia por renglón"></textarea>
+              </div>
+              <div class="acciones" style="justify-content:flex-start">
+                <button class="btn btn-maroon" type="submit" id="btn-agregar-materia">Agregar lista</button>
+                <button class="btn btn-ghost oscuro" type="button" id="btn-lista-colegio">Rellenar lista del colegio</button>
+                <button class="btn btn-peligro" type="button" id="btn-eliminar-materias">Eliminar todas</button>
+              </div>
+            </form>
+            <div class="lista-maestros" id="lista-materias">
+              <div class="skeleton"></div>
+            </div>
+              </div>
+            </div>
+
+            <div class="resumen-acordeon" id="caja-cat-claves">
+              <button class="resumen-acordeon-btn" type="button">
+                <span class="resumen-acordeon-txt"><strong>Contraseñas</strong><small>Nombre y clave de cada maestro</small></span>
+                <i class="dia-flecha" aria-hidden="true"></i>
+              </button>
+              <div class="resumen-acordeon-cuerpo" id="vista-claves">
+            <p class="intro">Al lado de cada nombre está su contraseña actual.</p>
+            <div class="lista-maestros" id="lista-claves-maestros">
+              <div class="skeleton"></div>
+            </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <main class="panel">
+        <div class="panel-body">
+          <div class="horario-estado-fila">
+            <h2 class="titulo-seccion" style="margin-top:0">Horarios</h2>
+            <p class="estado-guardado" id="estado-horario" data-estado="ok" aria-live="polite">Guardado</p>
+          </div>
+          <p class="intro">Tres horarios, como en los Excel del colegio: <strong>mañana</strong>, <strong>sábado</strong> y <strong>primaria</strong>. En cada uno abre un día y verás los periodos (grados) en columnas. Los cambios se <strong>guardan solos cada 5 segundos</strong> mientras editas.</p>
+
+          <div class="horario-turno">
+            <h3>Horario diario</h3>
+            <p class="intro">Lunes a viernes, mañana. Cada maestro tiene un color y sus materias se pintan igual. Se puede seguir editando. Receso de 10:00 a 10:30.</p>
+            <div id="leyenda-diario"></div>
+            <div id="cuadriculas-diario" class="cuadriculas-dias"></div>
+          </div>
+
+          <div class="horario-turno">
+            <h3>Horario de fin de semana</h3>
+            <p class="intro">Sábado. Las materias ya vienen del Excel en su hora y grado. Cada maestro tiene un color y sus materias se pintan igual. Se puede seguir editando. Recesos de 9:00 a 9:30 y de 12:10 a 12:50.</p>
+            <div id="leyenda-sabado"></div>
+            <div id="cuadriculas-sabado" class="cuadriculas-dias"></div>
+          </div>
+
+          <div class="horario-turno">
+            <h3>Horario de primaria</h3>
+            <p class="intro">Lunes a viernes, vespertino. Las materias ya vienen del Excel en su hora y grado. Las horas se pueden cambiar. Receso de 15:10 a 15:50.</p>
+            <div id="cuadriculas-primaria" class="cuadriculas-dias"></div>
+          </div>
+        </div>
+      </main>
+
+      <main class="panel">
+        <div class="panel-body">
+          <h2 class="titulo-seccion" style="margin-top:0">Resumen diario y semanal</h2>
+          <p class="intro">El <strong>diario</strong> es la semana en curso, de <strong>lunes a sábado</strong>. El siguiente lunes esa semana pasa a <strong>semanal</strong> y el diario vuelve a empezar. Si un maestro no viene, márcalo con <strong>No asistió</strong>: ese día no se le pedirán justificaciones ni contará como falta.</p>
+          <form id="form-no-asistio">
+            <div class="grid">
+              <div class="campo">
+                <label for="maestro-ausente">Maestro que no asistió</label>
+                <select id="maestro-ausente" required>
+                  <option value="">Elige un maestro</option>
+                </select>
+              </div>
+            </div>
+            <div class="acciones" style="justify-content:flex-start">
+              <button class="btn btn-maroon" type="submit" id="btn-no-asistio">No asistió</button>
+            </div>
+          </form>
+          <div class="pestanas pestanas-catalogo" role="tablist">
+            <button class="pestana activa" type="button" data-resumen="diario">Diario</button>
+            <button class="pestana" type="button" data-resumen="semanal">Semanal</button>
+          </div>
+          <div class="lista-compacta" id="lista-mensajes">
+            <div class="skeleton"></div>
+          </div>
+        </div>
+      </main>
+
+      <main class="panel">
+        <div class="panel-body">
+          <h2 class="titulo-seccion" style="margin-top:0">Reportes de alumnos</h2>
+          <p class="intro">Los maestros envían reportes de falta desde la bitácora. Aquí puedes revisarlos y <strong>descargarlos en PDF</strong> con el membrete del colegio. El contenido completo va en el PDF, no en el tablero.</p>
+          <div id="lista-reportes">
+            <div class="skeleton"></div>
+          </div>
+        </div>
+      </main>
+
+      <main class="panel">
+        <div class="panel-body">
+          <h2 class="titulo-seccion" style="margin-top:0">Cambiar contraseña</h2>
+          <form id="form-clave">
+            <div class="grid">
+              <div class="campo">
+                <label for="clave-actual">Contraseña actual</label>
+                <input type="password" id="clave-actual" required autocomplete="current-password">
+              </div>
+              <div class="campo">
+                <label for="clave-nueva">Nueva contraseña</label>
+                <input type="password" id="clave-nueva" required minlength="4" autocomplete="new-password">
+              </div>
+            </div>
+            <div class="acciones">
+              <button class="btn btn-maroon" type="submit">Guardar contraseña</button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <script src="util.js"></script>
+  <script src="reporte.js"></script>
+  <script src="config.js"></script>
+  <script src="config.local.js"></script>
+  <script src="api.js"></script>
+  <script src="plantilla-horarios.js"></script>
+  <script src="plantilla-maestros.js"></script>
+  <script src="auth.js"></script>
+  <script src="splash.js"></script>
+  <script src="install.js"></script>
+  <script>
+    (function () {
+      const app = document.getElementById("app");
+      const login = document.getElementById("caja-login");
+      const panel = document.getElementById("caja-panel");
+      const aviso = document.getElementById("aviso-admin");
+      const DIAS_DIARIO = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+      const DIAS_SABADO = ["Sábado"];
+      const MATERIA_PRUEBA = "#Prueba";
+      const MATERIAS_COLEGIO = [
+        "Administración", "Aprestamiento", "Archivo", "Auditoría", "Bancaria", "Biología",
+        "Caligrafía", "Cálculo", "Computación", "Comunicación", "Comunicación y Lenguaje",
+        "Contabilidad", "Conversación y Traducción", "Costos", "Cultura Maya", "Derecho",
+        "Derecho Mercantil", "Destrezas", "Didáctica de Kaqchiquel", "Didáctica de la Matemática",
+        "Didáctica del Lenguaje", "Educación Bilingüe", "Educación Estética",
+        "Ejercicios de Shorthand", "Ejercicios de Taquigrafía", "Emprendimiento",
+        "Enfoque Pedagógico", "Estadística", "Expresión", "Expresión Artística", "Ética",
+        "Filosofía", "Finanzas", "Física", "Física Fundamental", "Formación", "Geografía",
+        "Geografía Económica", "Gubernamental", "Historia", "Informática", "Inglés",
+        "Inglés Avanzado", "Inglés Comercial", "Inglés Comercial I", "Inglés Comercial II",
+        "Inglés Técnico", "Inglés Técnico II", "Introducción a la Contabilidad",
+        "Introducción a la Economía", "Kaqchiquel", "Laboratorio", "Lectura", "Legislación",
+        "Lengua y Literatura", "Lenguaje", "Literatura", "Literatura Maya", "Literatura Universal",
+        "Lógica Matemática", "Matemática", "Matemática Comercial", "Mecanografía",
+        "Medio Social y Natural", "Naturales", "Organización", "Ortocaligrafía",
+        "Planificación y Evaluación", "Práctica", "Práctica Auxiliatura", "Práctica de Español",
+        "Práctica de Inglés", "Práctica Docente", "Práctica Observación", "Práctica Supervisada",
+        "Producción de Contenidos", "Productividad", "Programación", "Programación Comercial II",
+        "Psicopedagogía", "Psicopedagogía Infantil", "Química", "Realidad Social", "Redacción",
+        "Relaciones Públicas", "Reparación", "Seminario", "Shorthand", "Sistemas", "Sociales",
+        "Sociedades", "Taquigrafía", "Temario", "Typing", "Valores"
+      ];
+      const BLOQUES_DIARIO = [
+        ["07:00", "07:45"],
+        ["07:45", "08:30"],
+        ["08:30", "09:15"],
+        ["09:15", "10:00"],
+        ["10:00", "10:30", "receso"],
+        ["10:30", "11:15"],
+        ["11:15", "12:00"],
+        ["12:00", "12:45"]
+      ];
+      const BLOQUES_SABADO = [
+        ["07:00", "07:40"],
+        ["07:40", "08:20"],
+        ["08:20", "09:00"],
+        ["09:00", "09:30", "receso"],
+        ["09:30", "10:10"],
+        ["10:10", "10:50"],
+        ["10:50", "11:30"],
+        ["11:30", "12:10"],
+        ["12:10", "12:50", "receso"],
+        ["12:50", "13:30"],
+        ["13:30", "14:10"],
+        ["14:10", "14:50"],
+        ["14:50", "15:30"],
+        ["15:30", "16:00"]
+      ];
+      const BLOQUES_PRIMARIA = [
+        ["13:10", "13:50"],
+        ["13:50", "14:30"],
+        ["14:30", "15:10"],
+        ["15:10", "15:50", "receso"],
+        ["15:50", "16:30"],
+        ["16:30", "17:00"],
+        ["17:00", "17:30"]
+      ];
+      const GRADOS_DIARIO = ["1ro. Básico", "2do. Básico", "3ro. Básico", "4to. Bach", "5to. Bach", "4to. Perito", "5to. Perito", "6to. Perito", "4to. Secre", "5to. Secre", "6to. Secre", "4to. MEIBI", "5to. MEIBI", "6to. MEIBI"];
+      const GRADOS_SABADO = ["1ro. Básico", "2do. Básico", "3ro. Básico", "1ro. Año", "2do. Año", "4to. Bach", "5to. Bach", "4to. Perito", "5to. Perito", "6to. Perito", "4to. Secre", "5to. Secre", "6to. Secre", "4to. BACO", "5to. BACO"];
+      const GRADOS_PRIMARIA = ["Párvulos", "Primero", "Segundo", "Tercero", "Cuarto", "Quinto", "Sexto"];
+      const TURNOS = [
+        { id: "diario", caja: "cuadriculas-diario", dias: DIAS_DIARIO, bloques: BLOQUES_DIARIO, grados: GRADOS_DIARIO, paso: 45, ini: "07:00", etiqueta: "diario" },
+        { id: "sabado", caja: "cuadriculas-sabado", dias: DIAS_SABADO, bloques: BLOQUES_SABADO, grados: GRADOS_SABADO, paso: 40, ini: "07:00", etiqueta: "de sábado" },
+        { id: "primaria", caja: "cuadriculas-primaria", dias: DIAS_DIARIO, bloques: BLOQUES_PRIMARIA, grados: GRADOS_PRIMARIA, paso: 40, ini: "13:10", etiqueta: "de primaria" }
+      ];
+      function fmtMin(mins) {
+        const t = ((mins % 1440) + 1440) % 1440;
+        return ("0" + Math.floor(t / 60)).slice(-2) + ":" + ("0" + (t % 60)).slice(-2);
+      }
+      function slugDia(dia) {
+        return LITPA_UTIL.normTxt(dia).replace(/\s+/g, "-");
+      }
+      let maestros = [];
+      let materias = [];
+      let horarios = [];
+      let reportes = [];
+      let alertasAdmin = [];
+      let vistaResumen = "diario";
+      let editando = false;
+      let pendienteGuardarPlantilla = { diario: false, sabado: false, primaria: false };
+      let sucioTurno = { diario: false, sabado: false, primaria: false };
+      let genTurno = { diario: 0, sabado: 0, primaria: 0 };
+      let guardandoTurno = { diario: false, sabado: false, primaria: false };
+      let colaCeldas = {};
+      let guardandoCeldas = false;
+      let pingGuardarTurno = null;
+      let cargaAdminPromesa = null;
+      let ultimoErrorHorario = "";
+
+      function claveCeldaSlot(s) {
+        return [
+          LITPA_UTIL.normTxt(s.dia),
+          horaTxt(s.horaInicio),
+          horaTxt(s.horaFin),
+          LITPA_UTIL.normTxt(s.grado)
+        ].join("|");
+      }
+
+      function slotDesdeCeldaEl(el) {
+        const caja = el && el.closest ? el.closest(".celda-clase") : null;
+        if (!caja) return null;
+        const tr = caja.closest("tr");
+        const tabla = caja.closest("table");
+        if (!tr || !tabla) return null;
+        const dia = tabla.getAttribute("data-dia") || "";
+        const iniEl = tr.querySelector(".fila-ini");
+        const finEl = tr.querySelector(".fila-fin");
+        const ini = iniEl ? horaTxt(iniEl.value) : "";
+        const fin = finEl ? horaTxt(finEl.value) : "";
+        const grados = gradosDeTabla(tabla);
+        const celdas = Array.from(tr.querySelectorAll(".celda-clase"));
+        const idx = celdas.indexOf(caja);
+        const grado = (idx >= 0 ? grados[idx] : "") || caja.getAttribute("data-grado") || "";
+        const maestroSel = caja.querySelector(".cel-maestro");
+        const materiaEl = caja.querySelector(".cel-materia");
+        return {
+          maestro: maestroSel ? maestroSel.value.replace(/\s+/g, " ").trim() : "",
+          materia: materiaEl ? materiaEl.value.replace(/\s+/g, " ").trim() : "",
+          dia: dia,
+          horaInicio: ini,
+          horaFin: fin,
+          grado: String(grado || "").trim()
+        };
+      }
+
+      function encolarCelda(slot) {
+        if (!slot || !slot.dia || !slot.horaInicio || !slot.horaFin || !slot.grado) return;
+        const k = claveCeldaSlot(slot);
+        colaCeldas[k] = {
+          maestro: String(slot.maestro || "").trim(),
+          materia: String(slot.materia || "").trim(),
+          dia: String(slot.dia || "").trim(),
+          horaInicio: horaTxt(slot.horaInicio),
+          horaFin: horaTxt(slot.horaFin),
+          grado: String(slot.grado || "").trim()
+        };
+      }
+
+      function mostrarPanel(ok) {
+        login.hidden = ok;
+        panel.hidden = !ok;
+        document.getElementById("btn-salir").hidden = !ok;
+      }
+
+      function horaTxt(v) {
+        const m = String(v || "").match(/(\d{1,2}):(\d{2})/);
+        if (!m) return "";
+        return ("0" + m[1]).slice(-2) + ":" + m[2];
+      }
+
+      function minutosTxt(v) {
+        const t = horaTxt(v);
+        if (!t) return -1;
+        const p = t.split(":");
+        return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+      }
+
+      function encajarBloque(ini, fin, bloques) {
+        let i;
+        for (i = 0; i < bloques.length; i++) {
+          if (bloques[i][0] === ini && bloques[i][1] === fin) return i;
+        }
+        for (i = 0; i < bloques.length; i++) {
+          if (bloques[i][0] === ini) return i;
+        }
+        return -1;
+      }
+
+      function empezarCargaAdmin() {
+        if (!cargaAdminPromesa) {
+          cargaAdminPromesa = LITPA.obtenerAdmin(true).catch(function (err) {
+            cargaAdminPromesa = null;
+            throw err;
+          });
+        }
+        return cargaAdminPromesa;
+      }
+
+      function turnoDe(h) {
+        if (LITPA_UTIL.normTxt(h.dia) === "sabado") return "sabado";
+        const g = LITPA_UTIL.normTxt(h.grado);
+        if (g && GRADOS_PRIMARIA.some(function (x) { return LITPA_UTIL.normTxt(x) === g; })) return "primaria";
+        const ini = horaTxt(h.horaInicio);
+        if (ini && ini >= "13:00") return "primaria";
+        return "diario";
+      }
+
+      function turnoDesdeNodo(el) {
+        const caja = el && el.closest ? el.closest(".cuadriculas-dias") : null;
+        if (!caja || !caja.id) return "";
+        return caja.id.replace("cuadriculas-", "");
+      }
+
+      function marcarSucioDesde(el) {
+        const id = typeof el === "string" ? el : turnoDesdeNodo(el);
+        if (!id || !sucioTurno.hasOwnProperty(id)) return;
+        editando = true;
+        sucioTurno[id] = true;
+        genTurno[id] = (genTurno[id] || 0) + 1;
+        ultimoErrorHorario = "";
+        if (el && el.closest) {
+          const slot = slotDesdeCeldaEl(el);
+          if (slot) encolarCelda(slot);
+        }
+        pintarEstadoHorario();
+      }
+
+      function pintarEstadoHorario() {
+        const n = document.getElementById("estado-horario");
+        if (!n) return;
+        const guardando = guardandoCeldas || TURNOS.some(function (t) { return guardandoTurno[t.id]; });
+        const sucio = Object.keys(colaCeldas).length > 0 || TURNOS.some(function (t) { return sucioTurno[t.id]; });
+        if (guardando) {
+          n.textContent = "Guardando…";
+          n.setAttribute("data-estado", "guardando");
+          return;
+        }
+        if (ultimoErrorHorario) {
+          n.textContent = ultimoErrorHorario.length > 42
+            ? "No se pudo guardar"
+            : ultimoErrorHorario;
+          n.title = ultimoErrorHorario;
+          n.setAttribute("data-estado", "error");
+          return;
+        }
+        if (sucio) {
+          n.textContent = "Sin guardar";
+          n.setAttribute("data-estado", "pendiente");
+          return;
+        }
+        n.textContent = "Guardado";
+        n.setAttribute("data-estado", "ok");
+      }
+
+      function aplicarCeldaEnMemoria(slot) {
+        const k = claveCeldaSlot(slot);
+        horarios = (horarios || []).filter(function (h) {
+          return claveCeldaSlot({
+            dia: h.dia,
+            horaInicio: h.horaInicio,
+            horaFin: h.horaFin,
+            grado: h.grado
+          }) !== k;
+        });
+        if (slot.materia || slot.maestro) horarios.push(slot);
+      }
+
+      async function guardarCeldasPendientes() {
+        const claves = Object.keys(colaCeldas);
+        if (!claves.length || guardandoCeldas) return;
+        guardandoCeldas = true;
+        pintarEstadoHorario();
+        const lote = claves.map(function (k) { return colaCeldas[k]; });
+        claves.forEach(function (k) { delete colaCeldas[k]; });
+        try {
+          let i;
+          for (i = 0; i < lote.length; i++) {
+            const slot = lote[i];
+            const res = await LITPA.guardarCeldaHorario(slot);
+            if (!res || !res.ok) throw new Error((res && res.error) || "No se pudo guardar el cambio.");
+            aplicarCeldaEnMemoria(slot);
+          }
+          TURNOS.forEach(function (t) {
+            if (!Object.keys(colaCeldas).length) sucioTurno[t.id] = false;
+          });
+          if (!Object.keys(colaCeldas).length &&
+              !sucioTurno.diario && !sucioTurno.sabado && !sucioTurno.primaria) {
+            editando = false;
+          }
+          ultimoErrorHorario = "";
+        } catch (err) {
+          lote.forEach(encolarCelda);
+          ultimoErrorHorario = (err && err.message) || "No se pudo guardar.";
+        } finally {
+          guardandoCeldas = false;
+          pintarEstadoHorario();
+        }
+      }
+
+      async function puedeGuardarPorTurno() {
+        if (pingGuardarTurno !== null) return pingGuardarTurno;
+        try {
+          const p = await LITPA.ping();
+          pingGuardarTurno = !!(p && p.guardarTurno);
+        } catch (err) {
+          pingGuardarTurno = false;
+        }
+        return pingGuardarTurno;
+      }
+
+      async function guardarHorarioTurno(id) {
+        const turno = TURNOS.filter(function (t) { return t.id === id; })[0];
+        if (!turno || guardandoTurno[id]) return;
+        if (Object.keys(colaCeldas).length) {
+          await guardarCeldasPendientes();
+          if (!sucioTurno[id]) return;
+        }
+        const gen = genTurno[id] || 0;
+        const leidos = leerCuadricula(turno.caja).map(function (s) {
+          return {
+            maestro: String(s.maestro || "").trim(),
+            materia: String(s.materia || "").trim(),
+            dia: String(s.dia || "").trim(),
+            horaInicio: horaTxt(s.horaInicio),
+            horaFin: horaTxt(s.horaFin),
+            grado: String(s.grado || "").trim()
+          };
+        }).filter(function (s) {
+          if (esFilaReceso(s)) return s.horaInicio && s.horaFin && s.dia;
+          return s.materia && s.horaInicio && s.horaFin && s.dia && s.grado;
+        });
+        const actuales = (horarios || []).filter(function (h) { return turnoDe(h) === turno.id; });
+        function firma(s) {
+          return [
+            LITPA_UTIL.normTxt(s.dia),
+            horaTxt(s.horaInicio),
+            horaTxt(s.horaFin),
+            LITPA_UTIL.normTxt(s.grado),
+            LITPA_UTIL.normTxt(s.materia),
+            LITPA_UTIL.normTxt(s.maestro)
+          ].join("|");
+        }
+        const mapaActual = {};
+        actuales.forEach(function (h) { mapaActual[firma(h)] = true; });
+        const cambios = leidos.filter(function (s) { return !mapaActual[firma(s)]; });
+        const firmasNuevas = {};
+        leidos.forEach(function (s) { firmasNuevas[claveCeldaSlot(s)] = true; });
+        const borrados = actuales.filter(function (h) {
+          if (esFilaReceso(h)) return false;
+          return !firmasNuevas[claveCeldaSlot(h)];
+        });
+
+        if (!cambios.length && !borrados.length) {
+          if ((genTurno[id] || 0) === gen) sucioTurno[id] = false;
+          if (!sucioTurno.diario && !sucioTurno.sabado && !sucioTurno.primaria) editando = false;
+          pintarEstadoHorario();
+          return;
+        }
+
+        guardandoTurno[id] = true;
+        pintarEstadoHorario();
+        const to = setTimeout(function () {
+          if (!guardandoTurno[id]) return;
+          guardandoTurno[id] = false;
+          ultimoErrorHorario = "El guardado tardó demasiado. Se reintenta solo el cambio.";
+          pintarEstadoHorario();
+        }, 45000);
+        try {
+          if (cambios.length + borrados.length <= 20) {
+            let i;
+            for (i = 0; i < cambios.length; i++) {
+              const res = await LITPA.guardarCeldaHorario(cambios[i]);
+              if (!res || !res.ok) throw new Error((res && res.error) || "No se pudo guardar.");
+              aplicarCeldaEnMemoria(cambios[i]);
+            }
+            for (i = 0; i < borrados.length; i++) {
+              const vacio = {
+                maestro: "",
+                materia: "",
+                dia: borrados[i].dia,
+                horaInicio: horaTxt(borrados[i].horaInicio),
+                horaFin: horaTxt(borrados[i].horaFin),
+                grado: String(borrados[i].grado || "").trim()
+              };
+              const res2 = await LITPA.guardarCeldaHorario(vacio);
+              if (!res2 || !res2.ok) throw new Error((res2 && res2.error) || "No se pudo quitar la celda.");
+              aplicarCeldaEnMemoria(vacio);
+            }
+          } else {
+            const porTurno = await puedeGuardarPorTurno();
+            const res = await LITPA.guardarSemana(leidos, porTurno ? turno.id : "");
+            if (!res || !res.ok) throw new Error((res && res.error) || "No se pudo guardar.");
+            horarios = (horarios || []).filter(function (h) { return turnoDe(h) !== turno.id; }).concat(leidos);
+          }
+          if ((genTurno[id] || 0) === gen) sucioTurno[id] = false;
+          if (!sucioTurno.diario && !sucioTurno.sabado && !sucioTurno.primaria) editando = false;
+          ultimoErrorHorario = "";
+        } catch (err) {
+          ultimoErrorHorario = (err && err.message) || "No se pudo guardar.";
+        } finally {
+          clearTimeout(to);
+          guardandoTurno[id] = false;
+          pintarEstadoHorario();
+        }
+      }
+
+      function diaAbiertoDefault(dias) {
+        const hoy = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][new Date().getDay()];
+        if (dias.indexOf(hoy) >= 0) return hoy;
+        return dias[0];
+      }
+
+      function gradosDeTurno(lista, turno) {
+        const orden = turno.grados.slice();
+        const vistos = {};
+        orden.forEach(function (g) { vistos[LITPA_UTIL.normTxt(g)] = true; });
+        (lista || []).forEach(function (h) {
+          if (turnoDe(h) !== turno.id) return;
+          const g = String(h.grado || "").trim();
+          if (!g || LITPA_UTIL.normTxt(g) === "sin periodo") return;
+          if (!vistos[LITPA_UTIL.normTxt(g)]) {
+            orden.push(g);
+            vistos[LITPA_UTIL.normTxt(g)] = true;
+          }
+        });
+        return orden;
+      }
+
+      function materiaHueca(m) {
+        const t = String(m || "").replace(/\s+/g, " ").trim();
+        return !t || t === MATERIA_PRUEBA || LITPA_UTIL.normTxt(t) === "prueba";
+      }
+
+      function materiaPlantilla(turnoId, dia, ini, grado) {
+        const raiz = (typeof PLANTILLA_HORARIOS !== "undefined" && PLANTILLA_HORARIOS) || {};
+        const t = raiz[turnoId] || {};
+        const diaKey = Object.keys(t).filter(function (d) {
+          return LITPA_UTIL.normTxt(d) === LITPA_UTIL.normTxt(dia);
+        })[0];
+        if (!diaKey) return "";
+        const fila = t[diaKey][horaTxt(ini)];
+        if (!fila || !fila.length) return "";
+        const turno = TURNOS.filter(function (x) { return x.id === turnoId; })[0];
+        if (!turno) return "";
+        let i = -1;
+        turno.grados.forEach(function (g, idx) {
+          if (LITPA_UTIL.normTxt(g) === LITPA_UTIL.normTxt(grado)) i = idx;
+        });
+        if (i < 0) return "";
+        return String(fila[i] || "").trim();
+      }
+
+      function celdasPlantillaTurno(turno) {
+        let n = 0;
+        turno.dias.forEach(function (dia) {
+          turno.bloques.forEach(function (b) {
+            if (b[2] === "receso") return;
+            turno.grados.forEach(function (g) {
+              if (materiaPlantilla(turno.id, dia, b[0], g)) n++;
+            });
+          });
+        });
+        return n;
+      }
+
+      function nombresDesdePlantilla() {
+        const raiz = (typeof PLANTILLA_HORARIOS !== "undefined" && PLANTILLA_HORARIOS) || {};
+        const out = [];
+        const vistos = {};
+        Object.keys(raiz).forEach(function (turnoId) {
+          const dias = raiz[turnoId];
+          if (!dias || typeof dias !== "object" || Array.isArray(dias)) return;
+          Object.keys(dias).forEach(function (dia) {
+            const horas = dias[dia];
+            if (!horas || typeof horas !== "object" || Array.isArray(horas)) return;
+            Object.keys(horas).forEach(function (hora) {
+              const fila = horas[hora];
+              if (!Array.isArray(fila)) return;
+              fila.forEach(function (n) {
+                n = String(n || "").trim();
+                if (!n) return;
+                const k = claveMateria(n);
+                if (!k || vistos[k]) return;
+                vistos[k] = true;
+                out.push(n);
+              });
+            });
+          });
+        });
+        return out;
+      }
+
+      function nombresMaterias() {
+        const out = [];
+        const vistos = {};
+        function add(n) {
+          n = String(n || "").trim();
+          if (!n || n === MATERIA_PRUEBA) return;
+          const k = claveMateria(n);
+          if (!k || vistos[k]) return;
+          vistos[k] = true;
+          out.push(n);
+        }
+        materias.forEach(function (m) { add(m.nombre); });
+        nombresDesdePlantilla().forEach(add);
+        out.sort(function (a, b) {
+          return a.localeCompare(b, "es");
+        });
+        return out;
+      }
+
+      function claveMateria(s) {
+        s = String(s || "").toLowerCase()
+          .replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
+          .replace(/ó/g, "o").replace(/ú/g, "u").replace(/ü/g, "u").replace(/ñ/g, "n")
+          .replace(/[^a-z0-9]+/g, " ").replace(/^\s+|\s+$/g, "").replace(/\s+/g, " ");
+        if (s === "matematicas") s = "matematica";
+        if (s === "laboratorio i") s = "laboratorio";
+        return s;
+      }
+
+      function rellenarListaColegio() {
+        const caja = document.getElementById("lista-nueva-materia");
+        if (caja) caja.value = MATERIAS_COLEGIO.join("\n");
+      }
+
+      function partirListaTexto(texto) {
+        return String(texto || "").split(/[\n,;]+/).map(function (n) {
+          return n.replace(/\s+/g, " ").trim();
+        }).filter(Boolean);
+      }
+
+      function materiasDesdeHorarios(lista) {
+        const mats = [];
+        const vistos = {};
+        function add(n) {
+          n = String(n || "").trim();
+          if (!n) return;
+          const k = n.toLowerCase();
+          if (vistos[k]) return;
+          vistos[k] = true;
+          mats.push({ nombre: n });
+        }
+        (lista || []).forEach(function (h) { add(h.materia); });
+        mats.sort(function (a, b) {
+          return a.nombre.localeCompare(b.nombre, "es");
+        });
+        return mats;
+      }
+
+      function opcionesMateria(seleccionado) {
+        const sel = String(seleccionado || "").trim();
+        let html = '<option value="">Elige materia</option>';
+        const vistos = {};
+        nombresMaterias().forEach(function (n) {
+          vistos[n.toLowerCase()] = true;
+          html += '<option value="' + LITPA_UTIL.escapeHtml(n) + '"' +
+            (n.toLowerCase() === sel.toLowerCase() ? " selected" : "") + ">" +
+            LITPA_UTIL.escapeHtml(n) + "</option>";
+        });
+        if (sel && !vistos[sel.toLowerCase()]) {
+          html += '<option value="' + LITPA_UTIL.escapeHtml(sel) + '" selected>' +
+            LITPA_UTIL.escapeHtml(sel) + "</option>";
+        }
+        return html;
+      }
+
+      function sincronizarSelectsMaterias() {}
+
+      function opcionesMaestroHtml(sel) {
+        const actual = String(sel || "").trim();
+        let html = '<option value="">Elige maestro</option>';
+        const vistos = {};
+        nombresMaestros().forEach(function (n) {
+          vistos[n.toLowerCase()] = true;
+          html += '<option value="' + LITPA_UTIL.escapeHtml(n) + '"' +
+            (n.toLowerCase() === actual.toLowerCase() ? " selected" : "") + ">" + LITPA_UTIL.escapeHtml(n) + "</option>";
+        });
+        if (actual && !vistos[actual.toLowerCase()]) {
+          html += '<option value="' + LITPA_UTIL.escapeHtml(actual) + '" selected>' +
+            LITPA_UTIL.escapeHtml(actual) + "</option>";
+        }
+        return html;
+      }
+
+      function sincronizarSelectsMaestros() {
+        document.querySelectorAll("select.cel-maestro").forEach(function (sel) {
+          sel.innerHTML = opcionesMaestroHtml(sel.value);
+        });
+      }
+
+      function pintarMaterias() {
+        const caja = document.getElementById("lista-materias");
+        if (!materias.length) {
+          caja.innerHTML = '<p class="vacio">Aún no hay materias. Agrégalas aquí para poder elegirlas en el horario.</p>';
+          return;
+        }
+        caja.innerHTML = materias.map(function (m) {
+          return '<div class="maestro-fila"><div class="maestro-item"><span class="avatar">' +
+            LITPA_UTIL.escapeHtml((m.nombre || "?").charAt(0).toUpperCase()) +
+            "</span><span>" + LITPA_UTIL.escapeHtml(m.nombre) + "</span></div>" +
+            '<button class="btn btn-peligro" type="button" data-eliminar-materia="' +
+            LITPA_UTIL.escapeHtml(m.nombre) + '">Eliminar</button></div>';
+        }).join("");
+      }
+
+      function pintarNombres() {
+        pintarMaterias();
+      }
+
+      function nombresDesdePlantillaMaestros() {
+        const raiz = (typeof PLANTILLA_MAESTROS !== "undefined" && PLANTILLA_MAESTROS) || {};
+        const out = [];
+        const vistos = {};
+        function add(n) {
+          n = String(n || "").replace(/\s+/g, " ").trim();
+          if (!n) return;
+          const k = n.toLowerCase();
+          if (vistos[k]) return;
+          vistos[k] = true;
+          out.push(n);
+        }
+        Object.keys(raiz.colores || {}).forEach(add);
+        Object.keys(raiz.coloresDiario || {}).forEach(add);
+        Object.keys(raiz.coloresPrimaria || {}).forEach(add);
+        Object.keys(raiz).forEach(function (turnoId) {
+          if (/^colores/i.test(turnoId)) return;
+          const dias = raiz[turnoId];
+          if (!dias || typeof dias !== "object" || Array.isArray(dias)) return;
+          Object.keys(dias).forEach(function (dia) {
+            const horas = dias[dia];
+            if (!horas || typeof horas !== "object" || Array.isArray(horas)) return;
+            Object.keys(horas).forEach(function (hora) {
+              const fila = horas[hora];
+              if (!Array.isArray(fila)) return;
+              fila.forEach(add);
+            });
+          });
+        });
+        return out;
+      }
+
+      function nombresMaestros() {
+        const out = [];
+        const vistos = {};
+        function add(n) {
+          n = LITPA_UTIL.nombreMaestroCanon(String(n || "").replace(/\s+/g, " ").trim());
+          if (!n) return;
+          const k = LITPA_UTIL.normTxt(n);
+          if (vistos[k]) return;
+          vistos[k] = true;
+          out.push(n);
+        }
+        maestros.forEach(function (m) { add(m.nombre); });
+        nombresDesdePlantillaMaestros().forEach(add);
+        out.sort(function (a, b) {
+          return a.localeCompare(b, "es");
+        });
+        return out;
+      }
+
+      function opcionesMaestro(seleccionado) {
+        const sel = LITPA_UTIL.nombreMaestroCanon(String(seleccionado || "").trim());
+        let html = '<option value="">Sin asignar</option>';
+        const vistos = {};
+        nombresMaestros().forEach(function (n) {
+          vistos[LITPA_UTIL.normTxt(n)] = true;
+          html += '<option value="' + LITPA_UTIL.escapeHtml(n) + '"' +
+            (LITPA_UTIL.normTxt(n) === LITPA_UTIL.normTxt(sel) ? " selected" : "") + ">" +
+            LITPA_UTIL.escapeHtml(n) + "</option>";
+        });
+        if (sel && !vistos[LITPA_UTIL.normTxt(sel)]) {
+          html += '<option value="' + LITPA_UTIL.escapeHtml(sel) + '" selected>' +
+            LITPA_UTIL.escapeHtml(sel) + "</option>";
+        }
+        return html;
+      }
+
+      function pintarMaestros() {
+        const caja = document.getElementById("lista-maestros");
+        if (!maestros.length) {
+          caja.innerHTML = '<p class="vacio">Aún no hay maestros. Agrégalos arriba para poder elegirlos en el horario.</p>';
+          pintarClavesMaestros();
+          return;
+        }
+        caja.innerHTML = maestros.map(function (m) {
+          return '<div class="maestro-fila"><div class="maestro-item"><span class="avatar">' +
+            LITPA_UTIL.escapeHtml((m.nombre || "?").charAt(0).toUpperCase()) +
+            "</span><span>" + LITPA_UTIL.escapeHtml(m.nombre) + "</span></div>" +
+            '<button class="btn btn-peligro" type="button" data-eliminar="' +
+            LITPA_UTIL.escapeHtml(m.nombre) + '">Eliminar</button></div>';
+        }).join("");
+        pintarClavesMaestros();
+      }
+
+      function pintarClavesMaestros() {
+        const caja = document.getElementById("lista-claves-maestros");
+        if (!caja) return;
+        if (!maestros.length) {
+          caja.innerHTML = '<p class="vacio">Aún no hay maestros registrados.</p>';
+          return;
+        }
+        caja.innerHTML = maestros.map(function (m) {
+          const cambiada = !!m.claveCambiada;
+          const clave = String(m.clave || "").trim() || (cambiada ? "Cambiada" : "LITPA");
+          return '<div class="maestro-fila"><div class="maestro-item"><span class="avatar">' +
+            LITPA_UTIL.escapeHtml((m.nombre || "?").charAt(0).toUpperCase()) +
+            "</span><span>" + LITPA_UTIL.escapeHtml(m.nombre) +
+            (cambiada ? "<br><small>Ya la cambió</small>" : "") +
+            "</span></div>" +
+            '<span class="maestro-clave' + (cambiada ? " cambiada" : "") + '">' +
+            LITPA_UTIL.escapeHtml(clave) + "</span></div>";
+        }).join("");
+      }
+
+      function textoMateria(cel) {
+        if (!cel || cel.materia == null) return "";
+        return String(cel.materia);
+      }
+
+      function celdaGradoHtml(dia, grado, cel, turnoId) {
+        const materia = textoMateria(cel);
+        const maestro = String((cel && cel.maestro) || "");
+        const hex = LITPA_UTIL.colorDeMaestro(maestro, turnoId);
+        const attrs = hex
+          ? ' class="celda-clase con-color" style="--color-maestro:' + LITPA_UTIL.escapeHtml(hex) + '"'
+          : ' class="celda-clase"';
+        return "<td><div" + attrs + ' data-dia="' + LITPA_UTIL.escapeHtml(dia) +
+          '" data-grado="' + LITPA_UTIL.escapeHtml(grado) + '">' +
+          '<span class="cel-label">Materia</span>' +
+          '<input type="text" class="cel-materia" autocomplete="off" spellcheck="false" placeholder="Escribe o elige" value="' +
+          LITPA_UTIL.escapeHtml(materia) + '" aria-label="Materia" aria-autocomplete="list">' +
+          '<span class="cel-label">Maestro</span>' +
+          '<select class="cel-maestro" aria-label="Maestro">' + opcionesMaestroHtml(maestro) + "</select>" +
+          "</div></td>";
+      }
+
+      function thPeriodoHtml(grado) {
+        return '<th class="th-periodo"><span class="cel-label">Periodo</span>' +
+          '<input type="text" class="cel-grado" value="' + LITPA_UTIL.escapeHtml(grado) + '" aria-label="Nombre del periodo">' +
+          '<button type="button" class="btn-quitar-grado" data-quitar-grado title="Quitar periodo">Quitar</button></th>';
+      }
+
+      function filaGradoHtml(ini, fin, celdas, receso, dia, grados, turnoId) {
+        celdas = celdas || {};
+        grados = grados || [];
+        if (receso) {
+          return '<tr class="fila-receso">' +
+            '<td><div class="hora-col">' +
+              '<span class="cel-label">Inicio / fin</span>' +
+              '<input type="time" class="fila-ini" value="' + LITPA_UTIL.escapeHtml(ini) + '">' +
+              '<input type="time" class="fila-fin" value="' + LITPA_UTIL.escapeHtml(fin) + '">' +
+            "</div></td>" +
+            '<td colspan="' + grados.length + '"><span class="marca-receso">Recreo / receso</span></td>' +
+            '<td><button class="btn btn-ghost oscuro btn-fila" type="button" data-quitar-fila>Quitar</button></td>' +
+            "</tr>";
+        }
+        return "<tr>" +
+          '<td><div class="hora-col">' +
+            '<span class="cel-label">Inicio / fin</span>' +
+            '<input type="time" class="fila-ini" value="' + LITPA_UTIL.escapeHtml(ini) + '">' +
+            '<input type="time" class="fila-fin" value="' + LITPA_UTIL.escapeHtml(fin) + '">' +
+          "</div></td>" +
+          grados.map(function (g) { return celdaGradoHtml(dia, g, celdas[g] || {}, turnoId); }).join("") +
+          '<td><button class="btn btn-ghost oscuro btn-fila" type="button" data-quitar-fila>Quitar</button></td>' +
+          "</tr>";
+      }
+
+      function esFilaReceso(h) {
+        const m = LITPA_UTIL.normTxt(h && h.materia);
+        const g = LITPA_UTIL.normTxt(h && h.grado);
+        return m === "receso" || m === "recreo" || g === "receso" || g === "recreo";
+      }
+
+      function mismaClaveMateria(a, b) {
+        const ka = claveMateria(a);
+        const kb = claveMateria(b);
+        if (!ka || !kb) return false;
+        if (ka === kb) return true;
+        if (ka.length >= 5 && kb.indexOf(ka) === 0) return true;
+        if (kb.length >= 5 && ka.indexOf(kb) === 0) return true;
+        return false;
+      }
+
+      function filaClaseVecina(filas, desde, dir) {
+        let i;
+        for (i = desde + dir; i >= 0 && i < filas.length; i += dir) {
+          if (!filas[i].receso) return filas[i];
+        }
+        return null;
+      }
+
+      function filasDia(lista, turno, dia, grados) {
+        const bloques = turno.bloques;
+        const filas = bloques.map(function (b) {
+          return { ini: b[0], fin: b[1], receso: b[2] === "receso", mapa: {} };
+        });
+        const extras = {};
+        (lista || []).forEach(function (h) {
+          if (turnoDe(h) !== turno.id) return;
+          if (LITPA_UTIL.normTxt(h.dia) !== LITPA_UTIL.normTxt(dia)) return;
+          const ini = horaTxt(h.horaInicio);
+          const fin = horaTxt(h.horaFin);
+          if (!ini || !fin) return;
+          const idx = encajarBloque(ini, fin, bloques);
+          const recesoDeFila = esFilaReceso(h) && !String(h.grado || "").trim();
+          if (recesoDeFila) {
+            if (idx >= 0 && bloques[idx][2] === "receso") {
+              filas[idx].receso = true;
+              return;
+            }
+            if (idx >= 0) return;
+            const tkR = ini + "-" + fin;
+            if (!extras[tkR]) extras[tkR] = { ini: ini, fin: fin, receso: true, mapa: {} };
+            extras[tkR].receso = true;
+            return;
+          }
+          if (esFilaReceso(h)) return;
+          const g = String(h.grado || "").trim();
+          if (!g || LITPA_UTIL.normTxt(g) === "sin periodo") return;
+          const exacto = idx >= 0 && bloques[idx][0] === ini && bloques[idx][1] === fin;
+          const cel = {
+            materia: String(h.materia || "").trim(),
+            maestro: String(h.maestro || "").trim(),
+            exacto: exacto
+          };
+          if (idx >= 0) {
+            filas[idx].mapa[LITPA_UTIL.normTxt(g)] = cel;
+            return;
+          }
+          const tk = ini + "-" + fin;
+          if (!extras[tk]) extras[tk] = { ini: ini, fin: fin, receso: false, mapa: {} };
+          extras[tk].mapa[LITPA_UTIL.normTxt(g)] = cel;
+        });
+        let llenoDePlantilla = false;
+        const out = filas.map(function (fila) {
+          const porNombre = {};
+          if (!fila.receso) {
+            grados.forEach(function (g) {
+              const prev = fila.mapa[LITPA_UTIL.normTxt(g)] || {};
+              let maestro = String(prev.maestro || "").trim();
+              let materia = String(prev.materia || "").trim();
+              if (materiaHueca(materia)) materia = "";
+              const canon = LITPA_UTIL.nombreMaestroCanon(maestro);
+              if (maestro && canon !== maestro) {
+                maestro = canon;
+                llenoDePlantilla = true;
+              }
+              const deMaestro = LITPA_UTIL.maestroPlantilla(turno.id, dia, fila.ini, g) || "";
+              const deAqui = materiaPlantilla(turno.id, dia, fila.ini, g) || "";
+              if (!maestro && deMaestro) {
+                maestro = deMaestro;
+                llenoDePlantilla = true;
+              }
+              if (!materia && deAqui) {
+                materia = deAqui;
+                llenoDePlantilla = true;
+              }
+              porNombre[g] = { materia: materia, maestro: maestro };
+            });
+          }
+          return { ini: fila.ini, fin: fila.fin, receso: fila.receso, grados: porNombre };
+        });
+        Object.keys(extras).sort().forEach(function (tk) {
+          const ex = extras[tk];
+          if (ex.receso) {
+            out.push({ ini: ex.ini, fin: ex.fin, receso: true, grados: {} });
+            return;
+          }
+          const porNombre = {};
+          let sirve = false;
+          grados.forEach(function (g) {
+            const prev = ex.mapa[LITPA_UTIL.normTxt(g)] || {};
+            let materia = String(prev.materia || "").trim();
+            const maestro = String(prev.maestro || "").trim();
+            if (materiaHueca(materia)) materia = "";
+            if (materia || maestro) sirve = true;
+            porNombre[g] = { materia: materia, maestro: maestro };
+          });
+          if (sirve) out.push({ ini: ex.ini, fin: ex.fin, receso: false, grados: porNombre });
+        });
+        out.sort(function (a, b) { return minutosTxt(a.ini) - minutosTxt(b.ini); });
+        out.llenoDePlantilla = llenoDePlantilla;
+        return out;
+      }
+
+      function tablaDiaHtml(turno, dia, grados, filas) {
+        const id = "cuerpo-" + turno.id + "-" + slugDia(dia);
+        const th = grados.map(thPeriodoHtml).join("");
+        const body = filas.map(function (f) {
+          return filaGradoHtml(f.ini, f.fin, f.grados, f.receso, dia, grados, turno.id);
+        }).join("");
+        return '<div class="horario-wrap"><table class="tabla-horario tabla-horario-grados" data-dia="' +
+          LITPA_UTIL.escapeHtml(dia) + '" data-turno="' + turno.id + '">' +
+          "<thead><tr><th>Hora</th>" + th + "<th></th></tr></thead>" +
+          '<tbody id="' + id + '" data-dia="' + LITPA_UTIL.escapeHtml(dia) + '">' + body + "</tbody></table></div>" +
+          '<div class="acciones" style="justify-content:flex-start">' +
+          '<button class="btn btn-ghost oscuro" type="button" data-agregar-hora="' + id + '" data-paso="' + turno.paso +
+          '" data-ini="' + turno.ini + '">Agregar hora</button>' +
+          '<button class="btn btn-ghost oscuro" type="button" data-agregar-receso="' + id + '" data-ini="' + turno.ini +
+          '">Agregar receso</button>' +
+          '<button class="btn btn-ghost oscuro" type="button" data-agregar-periodo>Agregar periodo</button></div>';
+      }
+
+      function pintarLeyendasHorario() {
+        const diario = document.getElementById("leyenda-diario");
+        if (diario) diario.innerHTML = LITPA_UTIL.leyendaMaestrosHtml("diario");
+        const sabado = document.getElementById("leyenda-sabado");
+        if (sabado) sabado.innerHTML = LITPA_UTIL.leyendaMaestrosHtml("sabado");
+      }
+
+      function aplicarColorCelda(el) {
+        const caja = el && el.closest ? el.closest(".celda-clase") : null;
+        if (!caja) return;
+        const sel = caja.querySelector(".cel-maestro");
+        const tabla = caja.closest("table");
+        const turnoId = tabla ? tabla.getAttribute("data-turno") : "";
+        LITPA_UTIL.aplicarColorMaestroNodo(caja, sel && sel.value, turnoId);
+      }
+
+      function pintarHorario(lista) {
+        if (editando && document.querySelector(".cuadriculas-dias tbody tr")) return;
+        pendienteGuardarPlantilla = { diario: false, sabado: false, primaria: false };
+        TURNOS.forEach(function (turno) {
+          const caja = document.getElementById(turno.caja);
+          if (!caja) return;
+          const abierto = diaAbiertoDefault(turno.dias);
+          const grados = gradosDeTurno(lista, turno);
+          const tabs = '<div class="pestanas pestanas-dias" role="tablist">' +
+            turno.dias.map(function (dia) {
+              const on = dia === abierto;
+              return '<button type="button" class="pestana' + (on ? " activa" : "") +
+                '" role="tab" data-dia="' + LITPA_UTIL.escapeHtml(dia) + '" aria-selected="' +
+                (on ? "true" : "false") + '">' + LITPA_UTIL.escapeHtml(dia) + "</button>";
+            }).join("") + "</div>";
+          const paneles = turno.dias.map(function (dia) {
+            const filas = filasDia(lista, turno, dia, grados);
+            if (filas.llenoDePlantilla) pendienteGuardarPlantilla[turno.id] = true;
+            const on = dia === abierto;
+            return '<section class="dia-horario' + (on ? " abierto" : "") + '" data-dia="' +
+              LITPA_UTIL.escapeHtml(dia) + '"><div class="dia-horario-cuerpo">' +
+              tablaDiaHtml(turno, dia, grados, filas) + "</div></section>";
+          }).join("");
+          caja.innerHTML = tabs + paneles;
+        });
+        pintarLeyendasHorario();
+      }
+
+      function leerCuadricula(caja) {
+        const slots = [];
+        const raiz = caja
+          ? (typeof caja === "string" ? document.getElementById(caja) : caja)
+          : document;
+        if (!raiz) return slots;
+        const tablas = caja
+          ? raiz.querySelectorAll("table")
+          : document.querySelectorAll(".cuadriculas-dias table");
+        tablas.forEach(function (tabla) {
+          const dia = tabla.getAttribute("data-dia");
+          const grados = Array.from(tabla.querySelectorAll("thead .cel-grado")).map(function (inp) {
+            return inp.value.replace(/\s+/g, " ").trim();
+          });
+          tabla.querySelectorAll("tbody tr").forEach(function (tr) {
+            const iniEl = tr.querySelector(".fila-ini");
+            const finEl = tr.querySelector(".fila-fin");
+            if (!iniEl || !finEl) return;
+            const ini = iniEl.value;
+            const fin = finEl.value;
+            if (tr.classList.contains("fila-receso")) {
+              if (!dia || !ini || !fin) return;
+              slots.push({
+                maestro: "",
+                materia: "Receso",
+                dia: dia,
+                horaInicio: ini,
+                horaFin: fin,
+                grado: ""
+              });
+              return;
+            }
+            tr.querySelectorAll(".celda-clase").forEach(function (celdaEl, i) {
+              const maestroSel = celdaEl.querySelector(".cel-maestro");
+              const materiaEl = celdaEl.querySelector(".cel-materia");
+              const maestro = maestroSel ? maestroSel.value.replace(/\s+/g, " ").trim() : "";
+              const materia = materiaEl ? materiaEl.value.replace(/\s+/g, " ").trim() : "";
+              const grado = grados[i] || celdaEl.getAttribute("data-grado") || "";
+              if (!maestro && !materia) return;
+              if (!grado || !dia || !ini || !fin) return;
+              slots.push({
+                maestro: maestro,
+                materia: materia,
+                dia: dia,
+                horaInicio: ini,
+                horaFin: fin,
+                grado: grado
+              });
+            });
+          });
+        });
+        return slots;
+      }
+
+      function gradosDeTabla(tabla) {
+        return Array.from(tabla.querySelectorAll("thead .cel-grado")).map(function (inp) {
+          return inp.value.replace(/\s+/g, " ").trim() || "Periodo";
+        });
+      }
+
+      function agregarPeriodoTabla(tabla, nombre) {
+        const lastTh = tabla.querySelector("thead th:last-child");
+        lastTh.insertAdjacentHTML("beforebegin", thPeriodoHtml(nombre));
+        const dia = tabla.getAttribute("data-dia");
+        tabla.querySelectorAll("tbody tr").forEach(function (tr) {
+          if (tr.classList.contains("fila-receso")) {
+            const rec = tr.querySelector("[colspan]");
+            if (rec) rec.colSpan = gradosDeTabla(tabla).length;
+            return;
+          }
+          const last = tr.querySelector("td:last-child");
+          last.insertAdjacentHTML("beforebegin", celdaGradoHtml(dia, nombre, {}, tabla.getAttribute("data-turno") || ""));
+        });
+      }
+
+      function agregarPeriodo(tabla) {
+        const caja = tabla.closest(".cuadriculas-dias");
+        const n = tabla.querySelectorAll("thead .cel-grado").length + 1;
+        const nombre = "Periodo " + n;
+        caja.querySelectorAll("table").forEach(function (t) {
+          agregarPeriodoTabla(t, nombre);
+        });
+        marcarSucioDesde(caja);
+      }
+
+      function quitarPeriodo(btn) {
+        const th = btn.closest("th");
+        const tabla = btn.closest("table");
+        const idx = Array.from(tabla.querySelectorAll("thead th")).indexOf(th);
+        if (idx < 1) return;
+        if (tabla.querySelectorAll("thead .cel-grado").length < 2) return;
+        th.remove();
+        tabla.querySelectorAll("tbody tr").forEach(function (tr) {
+          if (tr.classList.contains("fila-receso")) {
+            const rec = tr.querySelector("[colspan]");
+            if (rec) rec.colSpan = Math.max(1, gradosDeTabla(tabla).length);
+            return;
+          }
+          const tds = tr.querySelectorAll("td");
+          if (tds[idx]) tds[idx].remove();
+        });
+        marcarSucioDesde(tabla);
+      }
+
+      function agregarHora(btn) {
+        const id = btn.getAttribute("data-agregar-hora");
+        const paso = parseInt(btn.getAttribute("data-paso"), 10) || 45;
+        const iniDef = btn.getAttribute("data-ini") || "07:00";
+        const cuerpo = document.getElementById(id);
+        if (!cuerpo) return;
+        const tabla = cuerpo.closest("table");
+        const grados = gradosDeTabla(tabla);
+        const dia = cuerpo.getAttribute("data-dia");
+        const filas = cuerpo.querySelectorAll("tr");
+        let ini = iniDef;
+        const p0 = iniDef.split(":");
+        let fin = fmtMin((parseInt(p0[0], 10) || 0) * 60 + (parseInt(p0[1], 10) || 0) + paso);
+        if (filas.length) {
+          ini = filas[filas.length - 1].querySelector(".fila-fin").value || ini;
+          const p = ini.split(":");
+          fin = fmtMin((parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0) + paso);
+        }
+        cuerpo.insertAdjacentHTML("beforeend", filaGradoHtml(ini, fin, {}, false, dia, grados, tabla.getAttribute("data-turno") || ""));
+        marcarSucioDesde(cuerpo);
+      }
+
+      function agregarReceso(btn) {
+        const id = btn.getAttribute("data-agregar-receso");
+        const cuerpo = document.getElementById(id);
+        if (!cuerpo) return;
+        const caja = cuerpo.closest(".cuadriculas-dias");
+        let ini = btn.getAttribute("data-ini") || "10:00";
+        const filas = cuerpo.querySelectorAll("tr");
+        if (filas.length) {
+          const ultimo = filas[filas.length - 1].querySelector(".fila-fin");
+          if (ultimo && ultimo.value) ini = ultimo.value;
+        }
+        const p = ini.split(":");
+        const fin = fmtMin((parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0) + 30);
+        caja.querySelectorAll("tbody[data-dia]").forEach(function (tb) {
+          const dia = tb.getAttribute("data-dia");
+          const grados = gradosDeTabla(tb.closest("table"));
+          tb.insertAdjacentHTML("beforeend", filaGradoHtml(ini, fin, {}, true, dia, grados));
+        });
+        marcarSucioDesde(caja);
+      }
+
+      const comboCaja = document.createElement("div");
+      comboCaja.className = "combo-sugerencias";
+      comboCaja.hidden = true;
+      document.body.appendChild(comboCaja);
+      let comboInput = null;
+      let comboIndice = -1;
+
+      function nombresCombo(input) {
+        if (input.classList.contains("cel-materia")) return nombresMaterias();
+        return [];
+      }
+
+      function coincidenciasCombo(input) {
+        const texto = String(input.value || "").replace(/\s+/g, " ").trim();
+        const clave = claveMateria(texto);
+        const lista = nombresCombo(input);
+        if (!clave) return [];
+        const empiezan = [];
+        const contienen = [];
+        lista.forEach(function (n) {
+          const k = claveMateria(n);
+          const pos = k.indexOf(clave);
+          if (pos < 0) return;
+          if (pos === 0) empiezan.push(n);
+          else contienen.push(n);
+        });
+        return empiezan.concat(contienen).slice(0, 14);
+      }
+
+      function marcarCombo(nombre, texto) {
+        const t = String(texto || "").replace(/\s+/g, " ").trim();
+        const n = String(nombre || "");
+        if (!t) return LITPA_UTIL.escapeHtml(n);
+        const pos = n.toLowerCase().indexOf(t.toLowerCase());
+        if (pos < 0) return LITPA_UTIL.escapeHtml(n);
+        return LITPA_UTIL.escapeHtml(n.slice(0, pos)) + "<mark>" +
+          LITPA_UTIL.escapeHtml(n.slice(pos, pos + t.length)) + "</mark>" +
+          LITPA_UTIL.escapeHtml(n.slice(pos + t.length));
+      }
+
+      function colocarCombo(input) {
+        const r = input.getBoundingClientRect();
+        comboCaja.style.left = Math.max(8, r.left) + "px";
+        comboCaja.style.top = (r.bottom + 4) + "px";
+        comboCaja.style.minWidth = Math.max(r.width, 168) + "px";
+        comboCaja.style.maxWidth = Math.min(340, window.innerWidth - 16) + "px";
+      }
+
+      function pintarCombo(input) {
+        comboInput = input;
+        comboIndice = -1;
+        const texto = String(input.value || "").replace(/\s+/g, " ").trim();
+        if (!texto) {
+          comboCaja.hidden = true;
+          comboCaja.innerHTML = "";
+          return;
+        }
+        const hits = coincidenciasCombo(input);
+        let html = "";
+        hits.forEach(function (n, i) {
+          html += '<button type="button" class="combo-item" data-valor="' +
+            LITPA_UTIL.escapeHtml(n) + '" data-i="' + i + '">' + marcarCombo(n, texto) + "</button>";
+        });
+        const exacto = hits.some(function (n) { return claveMateria(n) === claveMateria(texto); });
+        if (texto && !exacto) {
+          html = '<button type="button" class="combo-item combo-usar" data-valor="' +
+            LITPA_UTIL.escapeHtml(texto) + '">Usar «' + LITPA_UTIL.escapeHtml(texto) + "»</button>" + html;
+        }
+        if (!html) {
+          comboCaja.hidden = true;
+          comboCaja.innerHTML = "";
+          return;
+        }
+        comboCaja.innerHTML = html;
+        comboCaja.hidden = false;
+        colocarCombo(input);
+      }
+
+      function cerrarCombo() {
+        comboCaja.hidden = true;
+        comboCaja.innerHTML = "";
+        comboInput = null;
+        comboIndice = -1;
+      }
+
+      function elegirCombo(valor) {
+        if (!comboInput) return;
+        comboInput.value = valor;
+        comboInput.dispatchEvent(new Event("input", { bubbles: true }));
+        cerrarCombo();
+        comboInput.focus();
+      }
+
+      function moverCombo(dir) {
+        const items = Array.from(comboCaja.querySelectorAll(".combo-item"));
+        if (!items.length) return;
+        comboIndice += dir;
+        if (comboIndice < 0) comboIndice = items.length - 1;
+        if (comboIndice >= items.length) comboIndice = 0;
+        items.forEach(function (el, i) {
+          el.classList.toggle("activa", i === comboIndice);
+        });
+        const on = items[comboIndice];
+        if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest" });
+      }
+
+      comboCaja.addEventListener("mousedown", function (ev) {
+        const item = ev.target.closest(".combo-item");
+        if (!item) return;
+        ev.preventDefault();
+        elegirCombo(item.getAttribute("data-valor") || "");
+      });
+
+      document.getElementById("caja-panel").addEventListener("focusin", function (ev) {
+        if (ev.target.classList && ev.target.classList.contains("cel-materia")) {
+          pintarCombo(ev.target);
+        }
+      });
+
+      document.getElementById("caja-panel").addEventListener("focusout", function (ev) {
+        if (ev.target.classList && ev.target.classList.contains("cel-materia")) {
+          setTimeout(function () {
+            if (comboInput === ev.target) cerrarCombo();
+          }, 180);
+        }
+      });
+
+      window.addEventListener("scroll", function () {
+        if (comboInput && !comboCaja.hidden) colocarCombo(comboInput);
+      }, true);
+
+      window.addEventListener("resize", function () {
+        if (comboInput && !comboCaja.hidden) colocarCombo(comboInput);
+      });
+
+      document.getElementById("caja-panel").addEventListener("input", function (ev) {
+        if (ev.target.closest(".cuadriculas-dias")) marcarSucioDesde(ev.target);
+        if (ev.target.classList && ev.target.classList.contains("cel-materia")) {
+          pintarCombo(ev.target);
+        }
+      });
+      document.getElementById("caja-panel").addEventListener("keydown", function (ev) {
+        if (!comboInput || comboCaja.hidden) return;
+        if (ev.target !== comboInput) return;
+        if (ev.key === "ArrowDown") {
+          ev.preventDefault();
+          moverCombo(1);
+        } else if (ev.key === "ArrowUp") {
+          ev.preventDefault();
+          moverCombo(-1);
+        } else if (ev.key === "Enter") {
+          const on = comboCaja.querySelector(".combo-item.activa") || comboCaja.querySelector(".combo-item");
+          if (on) {
+            ev.preventDefault();
+            elegirCombo(on.getAttribute("data-valor") || comboInput.value);
+          }
+        } else if (ev.key === "Escape") {
+          cerrarCombo();
+        }
+      });
+      document.getElementById("caja-panel").addEventListener("change", function (ev) {
+        if (ev.target.closest(".cuadriculas-dias")) marcarSucioDesde(ev.target);
+        if (ev.target.classList && ev.target.classList.contains("cel-maestro")) {
+          aplicarColorCelda(ev.target);
+        }
+      });
+      document.getElementById("caja-panel").addEventListener("click", function (ev) {
+        const tab = ev.target.closest(".cuadriculas-dias .pestana");
+        if (tab) {
+          const caja = tab.closest(".cuadriculas-dias");
+          const dia = tab.getAttribute("data-dia");
+          caja.querySelectorAll(".pestana").forEach(function (p) {
+            const on = p === tab;
+            p.classList.toggle("activa", on);
+            p.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          caja.querySelectorAll(".dia-horario").forEach(function (sec) {
+            sec.classList.toggle("abierto", sec.getAttribute("data-dia") === dia);
+          });
+          return;
+        }
+        const addHora = ev.target.closest("[data-agregar-hora]");
+        if (addHora) {
+          agregarHora(addHora);
+          return;
+        }
+        const addReceso = ev.target.closest("[data-agregar-receso]");
+        if (addReceso) {
+          agregarReceso(addReceso);
+          return;
+        }
+        const addPer = ev.target.closest("[data-agregar-periodo]");
+        if (addPer) {
+          agregarPeriodo(addPer.closest(".dia-horario-cuerpo").querySelector("table"));
+          return;
+        }
+        const delPer = ev.target.closest("[data-quitar-grado]");
+        if (delPer) {
+          quitarPeriodo(delPer);
+          return;
+        }
+        const delFila = ev.target.closest("[data-quitar-fila]");
+        if (delFila) {
+          const tbody = delFila.closest("tbody");
+          if (tbody.querySelectorAll("tr").length < 2) return;
+          delFila.closest("tr").remove();
+          marcarSucioDesde(tbody);
+        }
+      });
+
+      function esNoAsistio(m) {
+        const t = String(m.tipo || "").toLowerCase() + " " + String(m.texto || "").toLowerCase();
+        return t.indexOf("no asist") >= 0 || t.indexOf("noasist") >= 0;
+      }
+
+      function pintarSelectAusente() {
+        const sel = document.getElementById("maestro-ausente");
+        const actual = sel.value;
+        sel.innerHTML = '<option value="">Elige un maestro</option>' + nombresMaestros().map(function (n) {
+          return '<option value="' + LITPA_UTIL.escapeHtml(n) + '"' +
+            (n === actual ? " selected" : "") + ">" + LITPA_UTIL.escapeHtml(n) + "</option>";
+        }).join("");
+      }
+
+      function pintarReportes(lista) {
+        reportes = lista || [];
+        const caja = document.getElementById("lista-reportes");
+        if (!caja) return;
+        if (!reportes.length) {
+          caja.innerHTML = '<p class="vacio">Aún no hay reportes de falta de alumnos.</p>';
+          return;
+        }
+        const grupos = {};
+        const orden = [];
+        reportes.forEach(function (r) {
+          const dia = LITPA_UTIL.fechaCorta(r.fecha) || "Sin fecha";
+          if (!grupos[dia]) {
+            grupos[dia] = [];
+            orden.push(dia);
+          }
+          grupos[dia].push(r);
+        });
+        caja.innerHTML = orden.map(function (dia) {
+          const items = grupos[dia].map(function (r) {
+            return '<div class="reporte-item"><div><p>' +
+              LITPA_UTIL.escapeHtml(r.alumno || "Estudiante") +
+              "</p><small>" + LITPA_UTIL.escapeHtml(r.maestro || "") +
+              (r.grado ? " · " + LITPA_UTIL.escapeHtml(r.grado) : "") +
+              (r.tipo ? " · " + LITPA_UTIL.escapeHtml(r.tipo) : "") +
+              (r.fechaFalta ? " · Falta: " + LITPA_UTIL.escapeHtml(r.fechaFalta) : "") +
+              "</small></div>" +
+              '<button class="btn btn-maroon" type="button" data-pdf-reporte="' +
+              LITPA_UTIL.escapeHtml(r.id) + '">Descargar PDF</button></div>';
+          }).join("");
+          return '<div class="dia-grupo"><h3>' + LITPA_UTIL.escapeHtml(dia) + "</h3>" + items + "</div>";
+        }).join("");
+      }
+
+      function fechaMs(valor) {
+        const f = LITPA_UTIL.fechaCorta(valor);
+        const m = String(f).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+        if (!m) return 0;
+        const y = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+        return new Date(y, Number(m[2]) - 1, Number(m[1])).getTime();
+      }
+
+      function fmtDMY(ms) {
+        if (!ms) return "Sin fecha";
+        const d = new Date(ms);
+        return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear();
+      }
+
+      function nombreDiaMs(ms) {
+        return ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][new Date(ms).getDay()] || "";
+      }
+
+      function lunesMs(ms) {
+        const d = new Date(ms || Date.now());
+        const day = d.getDay();
+        d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+      }
+
+      function semanaDiariaActual(hoyMs) {
+        const d = new Date(hoyMs || Date.now());
+        if (d.getDay() === 0) {
+          d.setDate(d.getDate() + 1);
+          d.setHours(0, 0, 0, 0);
+          return d.getTime();
+        }
+        return lunesMs(hoyMs);
+      }
+
+      function diaSemanaMs(lunes, offset) {
+        const d = new Date(lunes);
+        d.setDate(d.getDate() + offset);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+      }
+
+      function etiquetaSemana(lunes) {
+        const ini = new Date(lunes);
+        const fin = new Date(lunes);
+        fin.setDate(fin.getDate() + 5);
+        const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        const d1 = ini.getDate();
+        const d2 = fin.getDate();
+        const m1 = meses[ini.getMonth()];
+        const m2 = meses[fin.getMonth()];
+        if (m1 === m2) return "Semana del " + d1 + " al " + d2 + " de " + m1;
+        return "Semana del " + d1 + " de " + m1 + " al " + d2 + " de " + m2;
+      }
+
+      function tipoAlerta(m) {
+        if (esNoAsistio(m)) return "ausente";
+        if (String(m.tipo || "").toLowerCase().indexOf("sin") >= 0 || !String(m.texto || "").trim()) return "sin";
+        return "justificado";
+      }
+
+      function conteoTexto(c) {
+        const partes = [];
+        if (c.sin) partes.push(c.sin + " sin justificación");
+        if (c.justificado) partes.push(c.justificado + (c.justificado === 1 ? " justificación" : " justificaciones"));
+        if (c.ausente) partes.push(c.ausente + (c.ausente === 1 ? " no asistió" : " no asistieron"));
+        return partes.join(" · ") || "Sin registros";
+      }
+
+      function detalleClases(arr) {
+        return arr.map(function (m) {
+          const p = [];
+          if (m.materia) p.push(m.materia);
+          if (m.horario) p.push(m.horario);
+          if (m.texto) p.push(m.texto);
+          return p.join(" · ");
+        }).filter(Boolean).join("; ");
+      }
+
+      function agruparMaestrosDia(items) {
+        const map = {};
+        const orden = [];
+        items.forEach(function (m) {
+          const k = String(m.maestro || "").toLowerCase() || "?";
+          if (!map[k]) {
+            map[k] = { maestro: m.maestro || "Sin maestro", ausente: false, sin: [], just: [] };
+            orden.push(k);
+          }
+          const t = tipoAlerta(m);
+          if (t === "ausente") map[k].ausente = true;
+          else if (t === "sin") map[k].sin.push(m);
+          else map[k].just.push(m);
+        });
+        return orden.map(function (k) { return map[k]; });
+      }
+
+      function contarMaestros(grupos) {
+        const c = { sin: 0, justificado: 0, ausente: 0 };
+        grupos.forEach(function (x) {
+          if (x.ausente) c.ausente += 1;
+          else {
+            if (x.sin.length) c.sin += 1;
+            if (x.just.length) c.justificado += 1;
+          }
+        });
+        return c;
+      }
+
+      function htmlMaestros(grupos) {
+        return grupos.map(function (x) {
+          if (x.ausente) {
+            return '<div class="resumen-maestro baja"><p>' + LITPA_UTIL.escapeHtml(x.maestro) +
+              "</p><small>No asistió · día completo</small></div>";
+          }
+          const lineas = [];
+          if (x.sin.length) {
+            lineas.push("Sin justificación" + (x.sin.length > 1 ? " · " + x.sin.length + " clases" : "") +
+              (detalleClases(x.sin) ? " · " + detalleClases(x.sin) : ""));
+          }
+          if (x.just.length) {
+            lineas.push("Justificación" + (detalleClases(x.just) ? " · " + detalleClases(x.just) : ""));
+          }
+          const cls = x.sin.length ? " alerta" : "";
+          return '<div class="resumen-maestro' + cls + '"><p>' + LITPA_UTIL.escapeHtml(x.maestro) +
+            "</p><small>" + LITPA_UTIL.escapeHtml(lineas.join(" | ")) + "</small></div>";
+        }).join("");
+      }
+
+      function htmlDia(dia, abierto) {
+        const maestrosG = agruparMaestrosDia(dia.items);
+        const c = contarMaestros(maestrosG);
+        return '<div class="resumen-acordeon' + (abierto ? " abierto" : "") + '">' +
+          '<button class="resumen-acordeon-btn" type="button">' +
+          '<span class="resumen-acordeon-txt"><strong>' + LITPA_UTIL.escapeHtml(dia.titulo) +
+          "</strong><small>" + LITPA_UTIL.escapeHtml(conteoTexto(c)) + "</small></span>" +
+          '<i class="dia-flecha" aria-hidden="true"></i></button>' +
+          '<div class="resumen-acordeon-cuerpo">' + htmlMaestros(maestrosG) + "</div></div>";
+      }
+
+      function armarDias(visibles) {
+        const grupos = {};
+        const orden = [];
+        visibles.forEach(function (m) {
+          const ms = fechaMs(m.fecha);
+          const clave = ms ? String(ms) : "0";
+          if (!grupos[clave]) {
+            grupos[clave] = {
+              ms: ms,
+              titulo: (nombreDiaMs(ms) ? nombreDiaMs(ms) + " " : "") + (LITPA_UTIL.fechaCorta(m.fecha) || "Sin fecha"),
+              items: []
+            };
+            orden.push(clave);
+          }
+          grupos[clave].items.push(m);
+        });
+        orden.sort(function (a, b) { return Number(b) - Number(a); });
+        return orden.map(function (k) { return grupos[k]; });
+      }
+
+      function pintarMensajes(lista) {
+        if (lista) alertasAdmin = lista;
+        const caja = document.getElementById("lista-mensajes");
+        const ausentes = {};
+        alertasAdmin.forEach(function (m) {
+          if (!esNoAsistio(m)) return;
+          ausentes[(LITPA_UTIL.fechaCorta(m.fecha) || "") + "|" + String(m.maestro || "").toLowerCase()] = true;
+        });
+        const visibles = alertasAdmin.filter(function (m) {
+          if (esNoAsistio(m)) return true;
+          const k = (LITPA_UTIL.fechaCorta(m.fecha) || "") + "|" + String(m.maestro || "").toLowerCase();
+          const sin = String(m.tipo || "").toLowerCase().indexOf("sin") >= 0 || !m.texto;
+          return !(ausentes[k] && sin);
+        });
+        const dias = armarDias(visibles);
+        const hoyMs = fechaMs(LITPA_UTIL.fechaActual()) || lunesMs(Date.now());
+        const semanaHoy = semanaDiariaActual(hoyMs);
+        if (vistaResumen === "semanal") {
+          if (!visibles.length) {
+            caja.innerHTML = '<p class="vacio">Aún no cierra una semana. El resumen semanal se arma el lunes siguiente, con lo de lunes a sábado.</p>';
+            return;
+          }
+          const semanas = {};
+          const ordenS = [];
+          dias.forEach(function (dia) {
+            const claveLunes = lunesMs(dia.ms || hoyMs);
+            if (claveLunes >= semanaHoy) return;
+            const clave = String(claveLunes);
+            if (!semanas[clave]) {
+              semanas[clave] = { lunes: claveLunes, dias: [], c: { sin: 0, justificado: 0, ausente: 0 } };
+              ordenS.push(clave);
+            }
+            const maestrosG = agruparMaestrosDia(dia.items);
+            const c = contarMaestros(maestrosG);
+            semanas[clave].dias.push(dia);
+            semanas[clave].c.sin += c.sin;
+            semanas[clave].c.justificado += c.justificado;
+            semanas[clave].c.ausente += c.ausente;
+          });
+          ordenS.sort(function (a, b) { return Number(b) - Number(a); });
+          if (!ordenS.length) {
+            caja.innerHTML = '<p class="vacio">Aún no cierra una semana. El resumen semanal se arma el lunes siguiente, con lo de lunes a sábado.</p>';
+            return;
+          }
+          caja.innerHTML = ordenS.map(function (k, idx) {
+            const s = semanas[k];
+            const abierta = idx === 0;
+            s.dias.sort(function (a, b) { return (a.ms || 0) - (b.ms || 0); });
+            const inner = s.dias.map(function (dia) {
+              return htmlDia(dia, false);
+            }).join("");
+            return '<div class="resumen-acordeon' + (abierta ? " abierto" : "") + '">' +
+              '<button class="resumen-acordeon-btn" type="button">' +
+              '<span class="resumen-acordeon-txt"><strong>' + LITPA_UTIL.escapeHtml(etiquetaSemana(s.lunes)) +
+              "</strong><small>" + LITPA_UTIL.escapeHtml(conteoTexto(s.c)) + "</small></span>" +
+              '<i class="dia-flecha" aria-hidden="true"></i></button>' +
+              '<div class="resumen-acordeon-cuerpo">' + inner + "</div></div>";
+          }).join("");
+          return;
+        }
+        const porDia = {};
+        dias.forEach(function (dia) {
+          if (lunesMs(dia.ms || 0) !== semanaHoy) return;
+          porDia[String(dia.ms)] = dia;
+        });
+        const plantilla = [];
+        let i;
+        for (i = 0; i < 6; i++) {
+          const ms = diaSemanaMs(semanaHoy, i);
+          const hallado = porDia[String(ms)];
+          plantilla.push(hallado || {
+            ms: ms,
+            titulo: nombreDiaMs(ms) + " " + fmtDMY(ms),
+            items: []
+          });
+        }
+        caja.innerHTML = plantilla.map(function (dia) {
+          if (!dia.items.length) {
+            return '<div class="resumen-acordeon' + (dia.ms === hoyMs ? " abierto" : "") + '">' +
+              '<button class="resumen-acordeon-btn" type="button">' +
+              '<span class="resumen-acordeon-txt"><strong>' + LITPA_UTIL.escapeHtml(dia.titulo) +
+              "</strong><small>Sin registros</small></span>" +
+              '<i class="dia-flecha" aria-hidden="true"></i></button>' +
+              '<div class="resumen-acordeon-cuerpo"><p class="vacio">Aún no hay faltas, justificaciones ni inasistencias de este día.</p></div></div>';
+          }
+          return htmlDia(dia, dia.ms === hoyMs);
+        }).join("");
+      }
+
+      function aplicarAdmin(data, reconstruir, persistirPlantilla) {
+        maestros = data.maestros || [];
+        horarios = data.horarios || [];
+        if (Array.isArray(data.materias)) materias = data.materias;
+        else materias = materiasDesdeHorarios(horarios);
+        pintarNombres();
+        pintarMaestros();
+        pintarSelectAusente();
+        if (reconstruir !== false) pintarHorario(horarios);
+        else {
+          sincronizarSelectsMaestros();
+          sincronizarSelectsMaterias();
+        }
+        pintarMensajes(data.alertas || []);
+        pintarReportes(data.reportes || []);
+        if (reconstruir !== false && persistirPlantilla) {
+          Object.keys(pendienteGuardarPlantilla).forEach(function (id) {
+            if (pendienteGuardarPlantilla[id]) marcarSucioDesde(id);
+          });
+        }
+      }
+
+      async function cargarTodo(reconstruir) {
+        const cajaM = document.getElementById("lista-maestros");
+        if (!LITPA.configurado()) {
+          cajaM.innerHTML = '<p class="vacio">Google Sheets no está conectado.</p>';
+          return;
+        }
+        const prev = LITPA.peek("admin");
+        if (prev && reconstruir !== false && (prev.maestros || prev.horarios || prev.alertas || prev.reportes || prev.materias)) {
+          aplicarAdmin(prev, true);
+        }
+        try {
+          aplicarAdmin(await LITPA.obtenerAdmin(true), reconstruir !== false, true);
+        } catch (err) {
+          if (!maestros.length) LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+        }
+      }
+
+      document.getElementById("catalogo-admin").addEventListener("click", function (ev) {
+        const btn = ev.target.closest(".resumen-acordeon-btn");
+        if (!btn) return;
+        const caja = btn.parentNode;
+        if (caja && caja.classList.contains("resumen-acordeon")) caja.classList.toggle("abierto");
+      });
+
+      document.querySelectorAll("[data-resumen]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          vistaResumen = btn.getAttribute("data-resumen") || "diario";
+          document.querySelectorAll("[data-resumen]").forEach(function (b) {
+            b.classList.toggle("activa", b === btn);
+          });
+          pintarMensajes();
+        });
+      });
+
+      document.getElementById("lista-mensajes").addEventListener("click", function (ev) {
+        const btn = ev.target.closest(".resumen-acordeon-btn");
+        if (!btn) return;
+        const caja = btn.parentNode;
+        if (caja && caja.classList.contains("resumen-acordeon")) caja.classList.toggle("abierto");
+      });
+
+      document.getElementById("form-maestro").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        const campo = document.getElementById("nuevo-maestro");
+        const nombre = campo.value.replace(/\s+/g, " ").trim();
+        if (!nombre) {
+          LITPA_UTIL.mostrarAviso(aviso, "Escribe el nombre del maestro.", "error");
+          return;
+        }
+        const boton = document.getElementById("btn-agregar-maestro");
+        boton.disabled = true;
+        boton.textContent = "Agregando...";
+        try {
+          const res = await LITPA.crearMaestro(nombre);
+          if (!res.ok) throw new Error(res.error || "No se pudo agregar.");
+          campo.value = "";
+          LITPA_UTIL.mostrarAviso(
+            aviso,
+            res.yaExistia
+              ? LITPA_UTIL.escapeHtml(nombre) + " ya estaba registrado."
+              : "Se agregó a " + LITPA_UTIL.escapeHtml(nombre) + ". Ya puedes elegirlo en el horario.",
+            "ok"
+          );
+          await cargarTodo(false);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "Agregar maestro";
+        }
+      });
+
+      document.getElementById("btn-eliminar-todos").addEventListener("click", async function () {
+        if (!maestros.length) {
+          LITPA_UTIL.mostrarAviso(aviso, "No hay maestros para eliminar.", "error");
+          return;
+        }
+        if (!confirm("¿Eliminar a TODOS los maestros? Se borrarán sus hojas y sus clases del horario.")) return;
+        const boton = document.getElementById("btn-eliminar-todos");
+        boton.disabled = true;
+        boton.textContent = "Eliminando...";
+        try {
+          const lista = maestros.slice();
+          for (let i = 0; i < lista.length; i++) {
+            const res = await LITPA.eliminarMaestro(lista[i].nombre);
+            if (!res.ok) throw new Error(res.error || "No se pudo eliminar a " + lista[i].nombre);
+          }
+          LITPA_UTIL.mostrarAviso(aviso, "Se eliminaron todos los maestros.", "ok");
+          editando = false;
+          await cargarTodo(true);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+          await cargarTodo(true);
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "Eliminar todos";
+        }
+      });
+
+      document.getElementById("btn-lista-colegio").addEventListener("click", function () {
+        rellenarListaColegio();
+      });
+
+      document.getElementById("form-materia").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        const campo = document.getElementById("lista-nueva-materia");
+        const nombres = partirListaTexto(campo.value);
+        if (!nombres.length) {
+          LITPA_UTIL.mostrarAviso(aviso, "Escribe o pega al menos una materia.", "error");
+          return;
+        }
+        const boton = document.getElementById("btn-agregar-materia");
+        boton.disabled = true;
+        boton.textContent = "Agregando...";
+        try {
+          const res = await LITPA.crearMaterias(nombres);
+          if (!res.ok) throw new Error(res.error || "No se pudo agregar la lista.");
+          const n = res.agregadas != null ? res.agregadas : nombres.length;
+          LITPA_UTIL.mostrarAviso(
+            aviso,
+            n
+              ? "Se agregaron " + n + " materia(s). Ya aparecen para elegirlas en el horario."
+              : "Esas materias ya estaban en la lista.",
+            "ok"
+          );
+          await cargarTodo(false);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "Agregar lista";
+        }
+      });
+
+      document.getElementById("btn-eliminar-materias").addEventListener("click", async function () {
+        if (!materias.length) {
+          LITPA_UTIL.mostrarAviso(aviso, "No hay materias para eliminar.", "error");
+          return;
+        }
+        if (!confirm("¿Eliminar TODAS las materias de la lista? El horario no se borra, pero tendrás que volver a elegirlas.")) return;
+        const boton = document.getElementById("btn-eliminar-materias");
+        boton.disabled = true;
+        boton.textContent = "Eliminando...";
+        try {
+          const lista = materias.slice();
+          for (let i = 0; i < lista.length; i++) {
+            const res = await LITPA.eliminarMateria(lista[i].nombre);
+            if (!res.ok) throw new Error(res.error || "No se pudo eliminar " + lista[i].nombre);
+          }
+          LITPA_UTIL.mostrarAviso(aviso, "Se eliminaron todas las materias de la lista.", "ok");
+          await cargarTodo(false);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+          await cargarTodo(false);
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "Eliminar todas";
+        }
+      });
+
+      document.getElementById("form-no-asistio").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        const sel = document.getElementById("maestro-ausente");
+        const nombre = sel.value.replace(/\s+/g, " ").trim();
+        if (!nombre) {
+          LITPA_UTIL.mostrarAviso(aviso, "Elige el maestro que no asistió.", "error");
+          return;
+        }
+        if (!confirm("¿Registrar que " + nombre + " no asistió hoy? No se le pedirán justificaciones de este día.")) return;
+        const boton = document.getElementById("btn-no-asistio");
+        boton.disabled = true;
+        boton.textContent = "Guardando...";
+        try {
+          const res = await LITPA.guardarNoAsistio({ maestro: nombre });
+          if (!res.ok) throw new Error(res.error || "No se pudo guardar.");
+          LITPA_UTIL.mostrarAviso(
+            aviso,
+            res.yaExistia
+              ? LITPA_UTIL.escapeHtml(nombre) + " ya estaba marcado como no asistió hoy."
+              : "Se registró que " + LITPA_UTIL.escapeHtml(nombre) + " no asistió. Ese día no cuenta como falta.",
+            "ok"
+          );
+          await cargarTodo(false);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+        } finally {
+          boton.disabled = false;
+          boton.textContent = "No asistió";
+        }
+      });
+
+      document.getElementById("form-login").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        const clave = document.getElementById("clave").value;
+        const btn = document.getElementById("btn-entrar");
+        if (btn) {
+          btn.classList.add("btn-pulsado");
+          btn.disabled = true;
+        }
+        login.hidden = true;
+        panel.hidden = true;
+        let data = null;
+        try {
+          data = await LITPA_SPLASH.show({
+            titulo: "Administración",
+            subtitulo: "Cargando panel de control LITPA",
+            duration: 1400,
+            until: (async function () {
+              try {
+                if (!(await LITPA_AUTH.verificar(clave))) return { abortSplash: true };
+              } catch (err) {
+                return { abortSplash: true, error: (err && err.message) || "No se pudo verificar." };
+              }
+              LITPA_AUTH.entrar();
+              try {
+                return await empezarCargaAdmin();
+              } catch (err) {
+                return { errorCarga: (err && err.message) || "No se pudieron cargar los datos." };
+              }
+            })()
+          });
+        } catch (err) {
+          data = { abortSplash: true, error: err.message || "No se pudieron cargar los datos." };
+        }
+        if (data && data.abortSplash) {
+          login.hidden = false;
+          panel.hidden = true;
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove("btn-pulsado");
+          }
+          LITPA_UTIL.mostrarAviso(
+            document.getElementById("aviso-login"),
+            data.error || "Contraseña incorrecta.",
+            "error"
+          );
+          const campo = document.getElementById("clave");
+          if (campo) campo.focus();
+          return;
+        }
+        if (!data || data.errorCarga) {
+          mostrarPanel(true);
+          LITPA_UTIL.mostrarAviso(aviso, (data && data.errorCarga) || "No se pudieron cargar los datos.", "error");
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove("btn-pulsado");
+          }
+          await cargarTodo(true);
+          return;
+        }
+        try {
+          aplicarAdmin(data, true, true);
+          mostrarPanel(true);
+        } catch (err) {
+          mostrarPanel(true);
+          LITPA_UTIL.mostrarAviso(aviso, err.message || "No se pudieron cargar los datos.", "error");
+          await cargarTodo(true);
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove("btn-pulsado");
+          }
+        }
+      });
+
+      document.getElementById("lista-materias").addEventListener("click", async function (ev) {
+        const btn = ev.target.closest("[data-eliminar-materia]");
+        if (!btn) return;
+        const nombre = btn.getAttribute("data-eliminar-materia");
+        if (!confirm("¿Quitar " + nombre + " de la lista de materias?")) return;
+        btn.disabled = true;
+        try {
+          const res = await LITPA.eliminarMateria(nombre);
+          if (!res.ok) throw new Error(res.error || "No se pudo eliminar.");
+          LITPA_UTIL.mostrarAviso(aviso, "Se quitó " + LITPA_UTIL.escapeHtml(nombre) + " de la lista.", "ok");
+          await cargarTodo(false);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById("lista-maestros").addEventListener("click", async function (ev) {
+        const btn = ev.target.closest("[data-eliminar]");
+        if (!btn) return;
+        const nombre = btn.getAttribute("data-eliminar");
+        if (!confirm("¿Eliminar a " + nombre + "? Se borrarán su hoja y sus clases del horario.")) return;
+        btn.disabled = true;
+        try {
+          const res = await LITPA.eliminarMaestro(nombre);
+          if (!res.ok) throw new Error(res.error || "No se pudo eliminar.");
+          LITPA_UTIL.mostrarAviso(aviso, "Se eliminó a " + LITPA_UTIL.escapeHtml(nombre) + ".", "ok");
+          editando = false;
+          await cargarTodo(true);
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message, "error");
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById("lista-reportes").addEventListener("click", function (ev) {
+        const btn = ev.target.closest("[data-pdf-reporte]");
+        if (!btn) return;
+        const id = btn.getAttribute("data-pdf-reporte");
+        const hallado = reportes.filter(function (r) { return String(r.id) === String(id); })[0];
+        if (hallado) LITPA_REPORTE.descargar(hallado, btn);
+      });
+
+      document.getElementById("form-clave").addEventListener("submit", async function (ev) {
+        ev.preventDefault();
+        const res = await LITPA_AUTH.cambiar(
+          document.getElementById("clave-actual").value,
+          document.getElementById("clave-nueva").value
+        );
+        LITPA_UTIL.mostrarAviso(aviso, res.ok ? "Contraseña actualizada." : res.error, res.ok ? "ok" : "error");
+        if (res.ok) ev.target.reset();
+      });
+
+      document.getElementById("btn-salir").addEventListener("click", function () {
+        LITPA_AUTH.salir();
+        mostrarPanel(false);
+        cargaAdminPromesa = null;
+        empezarCargaAdmin();
+        document.getElementById("clave").value = "";
+        document.getElementById("clave").focus();
+      });
+
+      const esAppAdmin = window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+      if (esAppAdmin) {
+        document.body.classList.add("app-admin");
+        const inicio = document.getElementById("btn-inicio");
+        if (inicio) inicio.hidden = true;
+        const logo = document.querySelector(".logo-link");
+        if (logo) {
+          logo.setAttribute("href", "index.html");
+          logo.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            LITPA_AUTH.salir();
+            mostrarPanel(false);
+          });
+        }
+      }
+
+      app.hidden = false;
+      LITPA_AUTH.salir();
+      mostrarPanel(false);
+      empezarCargaAdmin();
+      setTimeout(function () {
+        const clave = document.getElementById("clave");
+        if (clave) clave.focus();
+      }, 80);
+
+      setInterval(function () {
+        if (panel.hidden || !LITPA_AUTH.sesionOk()) return;
+        if (guardandoCeldas || TURNOS.some(function (t) { return guardandoTurno[t.id]; })) return;
+        if (Object.keys(colaCeldas).length) {
+          guardarCeldasPendientes();
+          return;
+        }
+        const pendiente = TURNOS.filter(function (t) { return sucioTurno[t.id]; })[0];
+        if (pendiente) guardarHorarioTurno(pendiente.id);
+      }, 5000);
+
+      setInterval(function () {
+        if (panel.hidden || !LITPA_AUTH.sesionOk()) return;
+        if (editando || Object.keys(colaCeldas).length || sucioTurno.diario || sucioTurno.sabado || sucioTurno.primaria) return;
+        cargarTodo(false);
+      }, 20000);
+    })();
+  </script>
+</body>
+</html>

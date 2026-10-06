@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a1518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LITPA Pantalla">
+  <title>LITPA · Pantalla de horario</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body class="kiosco-horario">
+  <div class="kiosco-tope">
+    <img class="kiosco-logo" src="Logo3D.png" alt="LITPA">
+    <div class="kiosco-dia">
+      <p class="kicker" id="kiosco-turno">Horario</p>
+      <h1 id="kiosco-titulo">Horario</h1>
+      <p id="kiosco-fecha"></p>
+    </div>
+    <div class="kiosco-reloj" aria-live="polite">
+      <span id="kiosco-hora">--:--:--</span>
+    </div>
+  </div>
+
+  <div class="kiosco-maestros" id="kiosco-maestros" hidden>
+    <button type="button" class="kiosco-chip activa" data-maestro="">Todos</button>
+  </div>
+
+  <div class="kiosco-cuerpo" id="kiosco-cuerpo">
+    <div class="skeleton"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="config.local.js"></script>
+  <script src="api.js"></script>
+  <script src="util.js"></script>
+  <script src="plantilla-horarios.js"></script>
+  <script src="plantilla-maestros.js"></script>
+  <script src="splash.js"></script>
+  <script src="install.js"></script>
+  <script>
+    (function () {
+      const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+      const GRADOS = {
+        diario: ["1ro. Básico", "2do. Básico", "3ro. Básico", "4to. Bach", "5to. Bach", "4to. Perito", "5to. Perito", "6to. Perito", "4to. Secre", "5to. Secre", "6to. Secre", "4to. MEIBI", "5to. MEIBI", "6to. MEIBI"],
+        sabado: ["1ro. Básico", "2do. Básico", "3ro. Básico", "1ro. Año", "2do. Año", "4to. Bach", "5to. Bach", "4to. Perito", "5to. Perito", "6to. Perito", "4to. Secre", "5to. Secre", "6to. Secre", "4to. BACO", "5to. BACO"],
+        primaria: ["Párvulos", "Primero", "Segundo", "Tercero", "Cuarto", "Quinto", "Sexto"]
+      };
+      const BLOQUES = {
+        diario: [
+          ["07:00", "07:45"], ["07:45", "08:30"], ["08:30", "09:15"], ["09:15", "10:00"],
+          ["10:00", "10:30", "receso"], ["10:30", "11:15"], ["11:15", "12:00"], ["12:00", "12:45"]
+        ],
+        sabado: [
+          ["07:00", "07:40"], ["07:40", "08:20"], ["08:20", "09:00"], ["09:00", "09:30", "receso"],
+          ["09:30", "10:10"], ["10:10", "10:50"], ["10:50", "11:30"], ["11:30", "12:10"],
+          ["12:10", "12:50", "receso"], ["12:50", "13:30"], ["13:30", "14:10"], ["14:10", "14:50"],
+          ["14:50", "15:30"], ["15:30", "16:00"]
+        ],
+        primaria: [
+          ["13:10", "13:50"], ["13:50", "14:30"], ["14:30", "15:10"], ["15:10", "15:50", "receso"],
+          ["15:50", "16:30"], ["16:30", "17:00"], ["17:00", "17:30"]
+        ]
+      };
+      const ETIQUETA = { diario: "Mañana", sabado: "Sábado", primaria: "Primaria" };
+
+      const $ = function (id) { return document.getElementById(id); };
+      const cuerpo = $("kiosco-cuerpo");
+      const cajaMaestros = $("kiosco-maestros");
+
+      let horarios = [];
+      let firma = "";
+      let maestroSel = "";
+      let diaVista = "";
+      let turnoVista = "";
+
+      function norm(s) { return LITPA_UTIL.normTxt(s); }
+      function esc(s) { return LITPA_UTIL.escapeHtml(s); }
+
+      function hora5(v) {
+        const m = String(v || "").match(/(\d{1,2}):(\d{2})/);
+        if (!m) return String(v || "").slice(0, 5);
+        return ("0" + m[1]).slice(-2) + ":" + m[2];
+      }
+
+      function minutos(v) {
+        const m = String(v || "").match(/(\d{1,2}):(\d{2})/);
+        if (!m) return -1;
+        return (parseInt(m[1], 10) || 0) * 60 + (parseInt(m[2], 10) || 0);
+      }
+
+      function ahoraPartes() {
+        const d = new Date();
+        return {
+          dia: DIAS[d.getDay()],
+          fecha: d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" }),
+          hora: d.toLocaleTimeString("es-MX", { hour12: false }),
+          hm: hora5(d.toLocaleTimeString("es-MX", { hour12: false })),
+          min: d.getHours() * 60 + d.getMinutes()
+        };
+      }
+
+      function turnoDe(h) {
+        if (norm(h.dia) === "sabado") return "sabado";
+        const g = norm(h.grado);
+        if (GRADOS.primaria.some(function (x) { return norm(x) === g; })) return "primaria";
+        const ini = hora5(h.horaInicio);
+        if (ini && ini >= "13:00") return "primaria";
+        return "diario";
+      }
+
+      function turnoDelMomento(ahora) {
+        if (ahora.dia === "Domingo") return "";
+        if (ahora.dia === "Sábado") return "sabado";
+        if (ahora.hm >= "13:00") return "primaria";
+        return "diario";
+      }
+
+      function pintarReloj(ahora) {
+        $("kiosco-hora").textContent = ahora.hora;
+        $("kiosco-fecha").textContent = ahora.fecha;
+      }
+
+      function encajar(ini, fin, bloques) {
+        let i;
+        for (i = 0; i < bloques.length; i++) {
+          if (bloques[i][0] === ini && bloques[i][1] === fin) return i;
+        }
+        for (i = 0; i < bloques.length; i++) {
+          if (bloques[i][0] === ini) return i;
+        }
+        return -1;
+      }
+
+      function slotsHoy(dia, turno) {
+        return (horarios || []).filter(function (h) {
+          return norm(h.dia) === norm(dia) && turnoDe(h) === turno;
+        });
+      }
+
+      function nombresMaestros(lista) {
+        const vistos = {};
+        const out = [];
+        lista.forEach(function (h) {
+          const n = LITPA_UTIL.maestroDeCelda(h);
+          if (!n) return;
+          const k = n.toLowerCase();
+          if (vistos[k]) return;
+          vistos[k] = true;
+          out.push(n);
+        });
+        out.sort(function (a, b) { return a.localeCompare(b, "es"); });
+        return out;
+      }
+
+      function pintarChips(nombres) {
+        if (!nombres.length) {
+          cajaMaestros.hidden = true;
+          cajaMaestros.innerHTML = "";
+          return;
+        }
+        cajaMaestros.hidden = false;
+        let html = '<button type="button" class="kiosco-chip' + (!maestroSel ? " activa" : "") + '" data-maestro="">Todos</button>';
+        nombres.forEach(function (n) {
+          const on = norm(n) === norm(maestroSel);
+          html += '<button type="button" class="kiosco-chip' + (on ? " activa" : "") + '" data-maestro="' +
+            esc(n) + '">' + esc(n) + "</button>";
+        });
+        cajaMaestros.innerHTML = html;
+      }
+
+      function marcarSeleccion(desplazar) {
+        const clave = norm(maestroSel);
+        let objetivo = null;
+        cuerpo.querySelectorAll(".kiosco-celda").forEach(function (td) {
+          const m = norm(td.getAttribute("data-maestro") || "");
+          const tr = td.closest("tr");
+          const enCurso = !!(tr && tr.classList.contains("fila-ahora"));
+          const on = !!(clave && m && m === clave && enCurso);
+          td.classList.toggle("celda-tacto", on);
+          if (on) objetivo = td;
+        });
+        cajaMaestros.querySelectorAll(".kiosco-chip").forEach(function (btn) {
+          btn.classList.toggle("activa", norm(btn.getAttribute("data-maestro") || "") === clave);
+        });
+        if (desplazar && objetivo && objetivo.scrollIntoView) {
+          objetivo.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+        }
+      }
+
+      function marcarAhora(minAhora) {
+        cuerpo.querySelectorAll("tr[data-ini]").forEach(function (tr) {
+          const a = minutos(tr.getAttribute("data-ini"));
+          const b = minutos(tr.getAttribute("data-fin"));
+          tr.classList.toggle("fila-ahora", a >= 0 && b >= 0 && minAhora >= a && minAhora < b);
+        });
+      }
+
+      function armarTabla(lista, turno, minAhora) {
+        const plantilla = GRADOS[turno] || [];
+        const bloques = BLOQUES[turno] || [];
+        const grados = plantilla.slice();
+        const vistos = {};
+        grados.forEach(function (g) { vistos[norm(g)] = true; });
+        lista.forEach(function (h) {
+          const g = String(h.grado || "").trim();
+          if (!g || norm(g) === "sin periodo") return;
+          if (!vistos[norm(g)]) {
+            grados.push(g);
+            vistos[norm(g)] = true;
+          }
+        });
+        const rows = bloques.map(function (b) {
+          return { ini: b[0], fin: b[1], receso: b[2] === "receso", mapa: {} };
+        });
+        lista.forEach(function (h) {
+          const ini = hora5(h.horaInicio);
+          const fin = hora5(h.horaFin);
+          let g = String(h.grado || "").trim();
+          const recesoLibre = /^(receso|recreo)$/.test(norm(h.materia)) && !g;
+          const idx = encajar(ini, fin, bloques);
+          if (recesoLibre) {
+            if (idx >= 0 && bloques[idx][2] === "receso") rows[idx].receso = true;
+            return;
+          }
+          if (!g) return;
+          if (/^(receso|recreo)$/.test(norm(h.materia))) return;
+          if (idx >= 0) {
+            if (bloques[idx][2] === "receso") return;
+            rows[idx].mapa[norm(g)] = h;
+          }
+        });
+
+        let html = '<div class="horario-wrap kiosco-wrap"><table class="tabla-horario tabla-horario-vista kiosco-tabla">';
+        html += "<thead><tr><th>Hora</th>";
+        grados.forEach(function (g) { html += "<th>" + esc(g) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        rows.forEach(function (fila) {
+          const hora = fila.ini + " – " + fila.fin;
+          const enCurso = minAhora >= minutos(fila.ini) && minAhora < minutos(fila.fin);
+          if (fila.receso) {
+            html += '<tr class="fila-receso' + (enCurso ? " fila-ahora" : "") + '" data-ini="' + esc(fila.ini) +
+              '" data-fin="' + esc(fila.fin) + '"><td>' + esc(hora) + "</td>" +
+              '<td colspan="' + grados.length + '"><span class="marca-receso">Receso</span></td></tr>';
+            return;
+          }
+          html += '<tr' + (enCurso ? ' class="fila-ahora"' : "") + ' data-ini="' + esc(fila.ini) +
+            '" data-fin="' + esc(fila.fin) + '"><td>' + esc(hora) + "</td>";
+          grados.forEach(function (g) {
+            const h = fila.mapa[norm(g)];
+            const sheetMat = String((h && h.materia) || "").trim();
+            const sheetMae = String((h && h.maestro) || "").trim();
+            const hueca = !sheetMat || sheetMat === "#Prueba" || norm(sheetMat) === "prueba";
+            const diaFila = (lista[0] && lista[0].dia) || "";
+            const base = {
+              dia: diaFila || (h && h.dia) || "",
+              horaInicio: fila.ini,
+              horaFin: fila.fin,
+              grado: g,
+              materia: hueca ? "" : sheetMat,
+              maestro: sheetMae
+            };
+            let materia = LITPA_UTIL.materiaDeCelda(base);
+            if (!materia) materia = LITPA_UTIL.materiaPlantilla(turno, base.dia, fila.ini, g) || "";
+            if (!materia && !hueca) materia = sheetMat;
+            let maestro = sheetMae;
+            if (!maestro && materia) maestro = LITPA_UTIL.maestroPlantilla(turno, base.dia, fila.ini, g) || "";
+            const hex = LITPA_UTIL.colorDeMaestro(maestro, turno);
+            html += '<td class="kiosco-celda' + (hex ? " con-color" : "") + '" data-maestro="' + esc(maestro) + '"' +
+              (hex ? ' style="--color-maestro:' + esc(hex) + '"' : "") + ">";
+            if (!materia) html += "—";
+            else {
+              html += "<strong>" + esc(materia) + "</strong>";
+              html += "<small>" + esc(maestro || "Sin asignar") + "</small>";
+            }
+            html += "</td>";
+          });
+          html += "</tr>";
+        });
+        html += "</tbody></table></div>";
+        return html;
+      }
+
+      function pintarCuadro() {
+        const ahora = ahoraPartes();
+        pintarReloj(ahora);
+        diaVista = ahora.dia;
+        turnoVista = turnoDelMomento(ahora);
+
+        $("kiosco-titulo").textContent = ahora.dia === "Domingo" ? "Domingo" : ahora.dia;
+        $("kiosco-turno").textContent = turnoVista ? (ETIQUETA[turnoVista] || "Horario") : "Sin clases";
+
+        if (ahora.dia === "Domingo") {
+          cajaMaestros.hidden = true;
+          cuerpo.innerHTML = '<div class="caja-estado kiosco-vacio"><strong>Hoy no hay clases</strong>El horario escolar vuelve el lunes.</div>';
+          return;
+        }
+
+        const lista = slotsHoy(diaVista, turnoVista);
+        if (!lista.length) {
+          cajaMaestros.hidden = true;
+          cuerpo.innerHTML = '<div class="caja-estado kiosco-vacio"><strong>Sin horario</strong>Aún no hay clases cargadas para ' +
+            esc(ahora.dia) + (turnoVista ? " · " + esc(ETIQUETA[turnoVista]) : "") + ".</div>";
+          return;
+        }
+
+        const nombres = nombresMaestros(lista);
+        if (maestroSel && !nombres.some(function (n) { return norm(n) === norm(maestroSel); })) maestroSel = "";
+        pintarChips(nombres);
+        cuerpo.innerHTML = armarTabla(lista, turnoVista, ahora.min);
+        marcarSeleccion(true);
+      }
+
+      function firmaDe(lista) {
+        return JSON.stringify((lista || []).map(function (s) {
+          return [s.maestro, s.materia, s.dia, s.horaInicio, s.horaFin, s.grado];
+        }).sort());
+      }
+
+      async function cargar(forzar) {
+        if (!LITPA.configurado()) {
+          cuerpo.innerHTML = '<div class="caja-estado kiosco-vacio"><strong>Sin conexión</strong>Google Sheets aún no está conectado.</div>';
+          return;
+        }
+        try {
+          const lista = await LITPA.obtenerHorarios(!!forzar);
+          const f = firmaDe(lista);
+          const ahora = ahoraPartes();
+          const dia = ahora.dia;
+          const turno = turnoDelMomento(ahora);
+          const cambio = f !== firma || dia !== diaVista || turno !== turnoVista;
+          horarios = lista;
+          firma = f;
+          if (cambio) pintarCuadro();
+          else {
+            pintarReloj(ahora);
+            marcarAhora(ahora.min);
+            marcarSeleccion();
+          }
+        } catch (err) {
+          if (!horarios.length) {
+            cuerpo.innerHTML = '<div class="caja-estado kiosco-vacio"><strong>No se pudo leer el horario</strong>' +
+              esc(err.message || "") + "</div>";
+          }
+        }
+      }
+
+      cajaMaestros.addEventListener("click", function (ev) {
+        const btn = ev.target.closest(".kiosco-chip");
+        if (!btn) return;
+        maestroSel = btn.getAttribute("data-maestro") || "";
+        marcarSeleccion(true);
+      });
+
+      cuerpo.addEventListener("click", function (ev) {
+        const td = ev.target.closest(".kiosco-celda");
+        if (!td) return;
+        const n = td.getAttribute("data-maestro") || "";
+        if (!n) return;
+        maestroSel = norm(maestroSel) === norm(n) ? "" : n;
+        marcarSeleccion(true);
+      });
+
+      const prev = LITPA.peek("horarios");
+      if (prev && prev.horarios && prev.horarios.length) {
+        horarios = prev.horarios;
+        firma = firmaDe(horarios);
+      }
+
+      LITPA_SPLASH.show({
+        titulo: "Horario",
+        subtitulo: "Preparando la pantalla",
+        duration: 1200,
+        until: cargar(true)
+      }).then(function () {
+        if (!horarios.length) pintarReloj(ahoraPartes());
+      });
+      setInterval(function () { cargar(false); }, 8000);
+      setInterval(function () {
+        const ahora = ahoraPartes();
+        pintarReloj(ahora);
+        if (ahora.dia !== diaVista || turnoDelMomento(ahora) !== turnoVista) pintarCuadro();
+        else {
+          marcarAhora(ahora.min);
+          marcarSeleccion();
+        }
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>

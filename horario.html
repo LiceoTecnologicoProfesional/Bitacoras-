@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a1518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LITPA Horario">
+  <title>LITPA · Horario</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="wrap wrap-ancho" id="app" hidden>
+    <header class="topbar">
+      <a class="logo-link" href="index.html" title="Ir al inicio">
+        <img class="logo-marca" src="Logo.png" alt="LITPA, ir al inicio">
+      </a>
+      <div>
+        <h1>Horario</h1>
+        <p>Hora, materia, maestro y grado de la base general</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-ghost" href="index.html">Inicio</a>
+        <a class="btn btn-ghost" href="maestro.html">Maestro</a>
+      </div>
+    </header>
+
+    <main class="panel">
+      <div class="panel-body">
+        <div id="aviso-horario"></div>
+        <p class="intro">Este horario se lee de Google Sheets. Usa las pestañas de Lunes a Sábado: al tocar un día se abre el cuadro completo, con todos los grados a cada hora, igual que en el Excel.</p>
+        <div id="vista-horario">
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        </div>
+      </div>
+    </main>
+    <p class="pie">LITPA · Horario general</p>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="config.local.js"></script>
+  <script src="api.js"></script>
+  <script src="util.js"></script>
+  <script src="plantilla-horarios.js"></script>
+  <script src="plantilla-maestros.js"></script>
+  <script src="splash.js"></script>
+  <script src="install.js"></script>
+  <script>
+    (function () {
+      const vista = document.getElementById("vista-horario");
+      const aviso = document.getElementById("aviso-horario");
+      const dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+      const diaHoy = dias[new Date().getDay()];
+
+      async function cargar() {
+        if (!LITPA.configurado()) {
+          vista.innerHTML = '<div class="caja-estado"><strong>Sin conexión</strong>Google Sheets aún no está conectado.</div>';
+          return;
+        }
+        try {
+          const lista = await LITPA.obtenerHorarios(true);
+          LITPA_UTIL.pintarHorarioGeneral(vista, lista, { diaHoy: diaHoy });
+          LITPA_UTIL.mostrarAviso(aviso, "");
+        } catch (err) {
+          LITPA_UTIL.mostrarAviso(aviso, err.message || "No se pudo leer el horario.", "error");
+        }
+      }
+
+      const prev = LITPA.peek("horarios");
+      if (prev && prev.horarios) {
+        LITPA_UTIL.pintarHorarioGeneral(vista, prev.horarios, { diaHoy: diaHoy });
+      }
+      LITPA_SPLASH.show({
+        titulo: "Horario",
+        subtitulo: "Cargando el horario del colegio",
+        duration: 1200,
+        until: cargar()
+      }).then(function () {
+        document.getElementById("app").hidden = false;
+      });
+    })();
+  </script>
+</body>
+</html>

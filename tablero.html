@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a1518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LITPA Tablero">
+  <title>LITPA · Tablero en vivo</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="apple-touch-icon" href="Logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="wrap" id="app" hidden>
+    <header class="topbar">
+      <a class="logo-link" href="index.html" title="Ir al inicio">
+        <img class="logo-marca" src="Logo.png" alt="LITPA, ir al inicio">
+      </a>
+      <div>
+        <h1>Tablero en vivo</h1>
+        <p>Hoy se ve en vivo cada clase · al cerrar la mañana, la primaria o el sábado se unifica ese periodo</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-ghost" href="maestro.html">Ingreso maestro</a>
+      </div>
+    </header>
+
+    <div class="tablero-head">
+      <div>
+        <p class="kicker" style="color: var(--maroon);">Portafolio 2</p>
+        <div class="vivo"><span class="punto"></span> En vivo · <span id="cuenta">5</span> s</div>
+        <p id="meta-tablero" class="intro" style="margin: 8px 0 0;">Esperando datos de Google Sheets...</p>
+        <div class="stats">
+          <div class="stat"><span>En vivo</span><b id="stat-vivo">0</b></div>
+          <div class="stat"><span>Resúmenes</span><b id="stat-resumen">0</b></div>
+          <div class="stat"><span>Maestros hoy</span><b id="stat-maestros">0</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="campo buscador">
+          <label for="buscar">Buscar</label>
+          <input type="text" id="buscar" placeholder="Maestro, tema, incidente..." autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="filtro-maestro">Filtrar por maestro</label>
+          <select id="filtro-maestro">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="aviso-tablero"></div>
+
+    <section class="seccion-tablero">
+      <h3>Entradas en vivo</h3>
+      <p>Solo se muestra lo de hoy. Los maestros aparecen aquí uno por uno mientras su horario sigue abierto.</p>
+      <div class="cards" id="cards-vivo"></div>
+    </section>
+
+    <section class="seccion-tablero">
+      <h3>Resumen</h3>
+      <p>Al terminar cada clase se agrupa esa hora. Cuando cierra un periodo se unifica: <strong>mañana</strong> (7:00 a 12:00), <strong>primaria</strong> por la tarde, <strong>sábado</strong> completo (7:00 a 16:00). El <strong>viernes</strong>, al cerrar el día, sale el resumen de toda la semana.</p>
+      <div class="cards" id="cards-resumen"></div>
+    </section>
+
+    <p class="pie">LITPA · Coordinación</p>
+    <p class="pie-admin"><a href="administracion.html">Administración</a></p>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="config.local.js"></script>
+  <script src="api.js"></script>
+  <script src="util.js"></script>
+  <script src="splash.js"></script>
+  <script src="install.js"></script>
+  <script>
+    (function () {
+      const vivoBox = document.getElementById("cards-vivo");
+      const resumenBox = document.getElementById("cards-resumen");
+      const meta = document.getElementById("meta-tablero");
+      const aviso = document.getElementById("aviso-tablero");
+      const filtro = document.getElementById("filtro-maestro");
+      const buscar = document.getElementById("buscar");
+      const cuenta = document.getElementById("cuenta");
+      let vistos = new Set();
+      let registros = [];
+      let registrosSemana = [];
+      let horarios = [];
+      let reloj = { fecha: "", minutos: null, dia: "" };
+      const GRADOS_NOM = ["parvulos", "primero", "segundo", "tercero", "cuarto", "quinto", "sexto"];
+      const TITULO_JORNADA = {
+        manana: "Resumen de la mañana",
+        primaria: "Resumen de primaria",
+        sabado: "Resumen del sábado"
+      };
+      const HORARIO_JORNADA = {
+        manana: "7:00 a 12:45",
+        primaria: "13:10 a 17:30",
+        sabado: "7:00 a 16:00"
+      };
+      let firma = "";
+      let segs = 5;
+
+      function norm(s) {
+        return String(s || "").toLowerCase()
+          .replace(/á/g, "a").replace(/é/g, "e").replace(/í/g, "i")
+          .replace(/ó/g, "o").replace(/ú/g, "u")
+          .replace(/\s+/g, " ").trim();
+      }
+
+      function minutosDe(txt) {
+        const m = String(txt || "").match(/(\d{1,2}):(\d{2})/);
+        if (!m) return -1;
+        return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+      }
+
+      function etiquetaHorario(h) {
+        return String(h.horaInicio || "").slice(0, 5) + " - " + String(h.horaFin || "").slice(0, 5);
+      }
+
+      function ahoraMinutos() {
+        if (typeof reloj.minutos === "number") return reloj.minutos;
+        const n = new Date();
+        return n.getHours() * 60 + n.getMinutes();
+      }
+
+      function fechaHoy() {
+        return reloj.fecha || LITPA_UTIL.fechaCorta(LITPA_UTIL.fechaActual());
+      }
+
+      function coincideTexto(obj, q) {
+        if (!q) return true;
+        return Object.keys(obj).some(function (k) {
+          return String(obj[k] || "").toLowerCase().indexOf(q) >= 0;
+        });
+      }
+
+      function parseFechaMx(s) {
+        const m = String(s || "").match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+        if (!m) return null;
+        const y = m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10);
+        return new Date(y, parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+      }
+
+      function diaDeFecha(fechaTxt) {
+        const d = parseFechaMx(fechaTxt);
+        if (!d || isNaN(d.getTime())) return "";
+        return ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][d.getDay()];
+      }
+
+      function diaHoyNorm() {
+        return norm(reloj.dia || diaDeFecha(fechaHoy()) ||
+          (["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][new Date().getDay()]));
+      }
+
+      function esPrimariaSlot(h) {
+        if (GRADOS_NOM.indexOf(norm(h.grado)) >= 0) return true;
+        const m = String(h.horaInicio || "").match(/(\d{1,2}):(\d{2})/);
+        if (!m) return false;
+        return (("0" + m[1]).slice(-2) + ":" + m[2]) >= "13:00";
+      }
+
+      function jornadaDeSlot(h) {
+        if (norm(h.dia) === "sabado") return "sabado";
+        if (esPrimariaSlot(h)) return "primaria";
+        return "manana";
+      }
+
+      function jornadaDeReg(reg) {
+        const dia = norm(diaDeFecha(reg.fecha) || reloj.dia);
+        if (dia === "sabado") return "sabado";
+        if (GRADOS_NOM.indexOf(norm(reg.curso)) >= 0) return "primaria";
+        const desdeHorario = String(reg.horario || "").match(/(\d{1,2}:\d{2})/);
+        const mins = minutosDe(desdeHorario ? desdeHorario[1] : (reg.horaEnvio || reg.horaEntrada));
+        if (mins >= 13 * 60) return "primaria";
+        return "manana";
+      }
+
+      function slotsJornadaHoy(tipo) {
+        const dia = diaHoyNorm();
+        return horarios.filter(function (h) {
+          if (norm(h.dia) !== dia) return false;
+          return jornadaDeSlot(h) === tipo;
+        });
+      }
+
+      function finJornada(tipo) {
+        let fin = -1;
+        slotsJornadaHoy(tipo).forEach(function (h) {
+          const f = minutosDe(h.horaFin);
+          if (f > fin) fin = f;
+        });
+        if (fin >= 0) return fin;
+        if (tipo === "manana") return 12 * 60;
+        if (tipo === "primaria") return 17 * 60 + 30;
+        return 16 * 60;
+      }
+
+      function jornadaAplicaHoy(tipo) {
+        const dia = diaHoyNorm();
+        if (dia === "domingo") return false;
+        if (tipo === "sabado") return dia === "sabado";
+        return dia !== "sabado";
+      }
+
+      function jornadaCerrada(tipo) {
+        if (!jornadaAplicaHoy(tipo)) return false;
+        return ahoraMinutos() > finJornada(tipo);
+      }
+
+      function tiposHoy() {
+        return diaHoyNorm() === "sabado" ? ["sabado"] : ["manana", "primaria"];
+      }
+
+      function semanaLista() {
+        if (diaHoyNorm() !== "viernes") return false;
+        if (!jornadaCerrada("manana")) return false;
+        if (slotsJornadaHoy("primaria").length && !jornadaCerrada("primaria")) return false;
+        return true;
+      }
+
+      function hayJornadaCerrada() {
+        return tiposHoy().some(jornadaCerrada);
+      }
+
+      function asignarGrupo(reg) {
+        const fecha = LITPA_UTIL.fechaCorta(reg.fecha);
+        const jornada = jornadaDeReg(reg);
+        if (reg.materia && reg.horario) {
+          return {
+            clave: fecha + "|" + norm(reg.materia) + "|" + String(reg.horario).replace(/\s/g, "") + "|" + norm(reg.curso),
+            fecha: fecha,
+            materia: reg.materia,
+            horario: reg.horario,
+            curso: reg.curso || "",
+            jornada: jornada
+          };
+        }
+        const envio = minutosDe(reg.horaEnvio || reg.horaEntrada);
+        let hallado = null;
+        horarios.forEach(function (h) {
+          if (norm(h.maestro) !== norm(reg.maestro)) return;
+          if (envio < minutosDe(h.horaInicio) || envio > minutosDe(h.horaFin)) return;
+          hallado = h;
+        });
+        if (hallado) {
+          const horario = etiquetaHorario(hallado);
+          return {
+            clave: fecha + "|" + norm(hallado.materia) + "|" + horario.replace(/\s/g, "") + "|" + norm(hallado.grado || reg.curso),
+            fecha: fecha,
+            materia: hallado.materia,
+            horario: horario,
+            curso: hallado.grado || reg.curso || "",
+            jornada: jornadaDeSlot(hallado)
+          };
+        }
+        return {
+          clave: fecha + "|dia|" + (reg.maestro || "sin"),
+          fecha: fecha,
+          materia: "Sin materia asignada",
+          horario: "",
+          jornada: jornada
+        };
+      }
+
+      function grupoAbierto(grupo) {
+        const hoy = LITPA_UTIL.fechaCorta(fechaHoy());
+        if (LITPA_UTIL.fechaCorta(grupo.fecha) !== hoy) return false;
+        if (grupo.jornada && jornadaCerrada(grupo.jornada)) return false;
+        const now = ahoraMinutos();
+        let fin = -1;
+        horarios.forEach(function (h) {
+          if (norm(h.materia) !== norm(grupo.materia)) return;
+          const et = etiquetaHorario(h);
+          if (grupo.horario && norm(et) !== norm(grupo.horario) &&
+              String(grupo.horario).indexOf(h.horaInicio) < 0) return;
+          const f = minutosDe(h.horaFin);
+          if (f > fin) fin = f;
+        });
+        if (fin < 0) {
+          const m = String(grupo.horario || "").match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+          if (m) fin = minutosDe(m[2]);
+        }
+        if (fin < 0) fin = 18 * 60;
+        return now <= fin;
+      }
+
+      function armarVistas() {
+        const hoy = LITPA_UTIL.fechaCorta(fechaHoy());
+        const vivos = [];
+        const resumenes = [];
+
+        tiposHoy().forEach(function (tipo) {
+          const regs = registros.filter(function (r) {
+            return LITPA_UTIL.fechaCorta(r.fecha) === hoy && jornadaDeReg(r) === tipo;
+          });
+          if (jornadaCerrada(tipo)) {
+            if (!regs.length) return;
+            regs.sort(function (a, b) {
+              return String(a.horaEnvio || a.horaEntrada || "").localeCompare(String(b.horaEnvio || b.horaEntrada || ""));
+            });
+            resumenes.push({
+              clave: hoy + "|" + tipo,
+              fecha: hoy,
+              materia: TITULO_JORNADA[tipo],
+              horario: HORARIO_JORNADA[tipo],
+              esJornada: true,
+              jornada: tipo,
+              registros: regs
+            });
+            return;
+          }
+          const grupos = {};
+          regs.forEach(function (reg) {
+            const g = asignarGrupo(reg);
+            if (!grupos[g.clave]) {
+              grupos[g.clave] = {
+                clave: g.clave,
+                fecha: g.fecha,
+                materia: g.materia,
+                horario: g.horario,
+                curso: g.curso || "",
+                jornada: tipo,
+                registros: []
+              };
+            }
+            grupos[g.clave].registros.push(reg);
+          });
+          Object.keys(grupos).forEach(function (k) {
+            const g = grupos[k];
+            g.registros.sort(function (a, b) {
+              return String(a.horaEntrada || a.horaEnvio || "").localeCompare(String(b.horaEntrada || b.horaEnvio || ""));
+            });
+            if (grupoAbierto(g)) {
+              g.registros.forEach(function (r) { vivos.push(r); });
+            } else {
+              resumenes.push(g);
+            }
+          });
+        });
+
+        if (semanaLista()) {
+          const sem = (registrosSemana || []).filter(function (r) {
+            return jornadaDeReg(r) !== "sabado";
+          });
+          if (sem.length) {
+            sem.sort(function (a, b) {
+              return String(LITPA_UTIL.fechaCorta(a.fecha)).localeCompare(String(LITPA_UTIL.fechaCorta(b.fecha))) ||
+                String(a.horaEnvio || a.horaEntrada || "").localeCompare(String(b.horaEnvio || b.horaEntrada || ""));
+            });
+            resumenes.push({
+              clave: "semana|" + hoy,
+              fecha: hoy,
+              materia: "Resumen de la semana",
+              horario: "Lunes a viernes",
+              esSemana: true,
+              registros: sem
+            });
+          }
+        }
+
+        vivos.sort(function (a, b) {
+          return String(b.horaEntrada || b.horaEnvio || "").localeCompare(String(a.horaEntrada || a.horaEnvio || ""));
+        });
+        resumenes.sort(function (a, b) {
+          if (a.esSemana) return 1;
+          if (b.esSemana) return -1;
+          return String(a.jornada || "").localeCompare(String(b.jornada || "")) ||
+            String(b.fecha + b.horario).localeCompare(String(a.fecha + a.horario));
+        });
+        return { vivos: vivos, resumenes: resumenes };
+      }
+
+      function filtrarVivos(lista) {
+        const elegido = filtro.value;
+        const q = buscar.value.trim().toLowerCase();
+        return lista.filter(function (r) {
+          if (elegido && r.maestro !== elegido) return false;
+          return coincideTexto(r, q);
+        });
+      }
+
+      function filtrarResumenes(lista) {
+        const elegido = filtro.value;
+        const q = buscar.value.trim().toLowerCase();
+        return lista.filter(function (g) {
+          if (elegido && !g.registros.some(function (r) { return r.maestro === elegido; })) return false;
+          if (!q) return true;
+          const blob = [g.materia, g.horario, g.fecha].concat(g.registros.map(function (r) {
+            return [r.maestro, r.tema, r.actividad, r.tarea, r.incidente, r.curso, esReporte(r) ? "reporte" : ""].join(" ");
+          })).join(" ").toLowerCase();
+          return blob.indexOf(q) >= 0;
+        });
+      }
+
+      function esReporte(reg) {
+        return !!(reg && (reg.esReporte ||
+          LITPA_UTIL.normTxt(reg.tema) === "se anadio reporte" ||
+          LITPA_UTIL.normTxt(reg.tipoIncidente) === "reporte"));
+      }
+
+      function dato(etiqueta, valor) {
+        return '<div class="dato"><span>' + etiqueta + "</span>" + LITPA_UTIL.escapeHtml(valor || "—") + "</div>";
+      }
+
+      function tarjetaViva(reg, numero, esNueva) {
+        if (esReporte(reg)) {
+          return (
+            '<article class="card' + (esNueva ? " nueva" : "") + '">' +
+              '<div class="card-top">' +
+                "<h2>" + LITPA_UTIL.escapeHtml(reg.maestro || "Sin maestro") + "</h2>" +
+                '<span class="badge">Reporte</span>' +
+              "</div>" +
+              '<div class="datos">' +
+                dato("Aviso", "Se añadió reporte") +
+                dato("Materia", reg.materia) +
+                dato("Horario", reg.horario) +
+              "</div>" +
+            "</article>"
+          );
+        }
+        const alerta = reg.incidente || reg.tipoIncidente;
+        return (
+          '<article class="card' + (esNueva ? " nueva" : "") + '">' +
+            '<div class="card-top">' +
+              "<h2>" + LITPA_UTIL.escapeHtml(reg.maestro || "Sin maestro") + "</h2>" +
+              '<span class="badge' + (alerta ? " alerta" : "") + '">Entrada ' + numero + "</span>" +
+            "</div>" +
+            '<div class="datos">' +
+              dato("Curso", reg.curso) +
+              dato("Materia", reg.materia) +
+              dato("Horario", reg.horario) +
+              dato("Entrada", LITPA_UTIL.horaCorta(reg.horaEntrada)) +
+              dato("Envío", LITPA_UTIL.horaCorta(reg.horaEnvio)) +
+              dato("Tema", reg.tema) +
+              dato("Actividad", reg.actividad) +
+              dato("Tarea", reg.tarea) +
+            "</div>" +
+            (reg.incidente || reg.tipoIncidente
+              ? '<div class="incidente-texto">' + LITPA_UTIL.escapeHtml((reg.tipoIncidente ? reg.tipoIncidente + ". " : "") + (reg.incidente || "")) + "</div>"
+              : "") +
+          "</article>"
+        );
+      }
+
+      function filaResumen(reg, extraDia) {
+        if (esReporte(reg)) {
+          return '<div class="resumen-fila"><b>' + LITPA_UTIL.escapeHtml(reg.maestro) +
+            "</b><small>Se añadió reporte" +
+            (extraDia && reg.materia ? " · " + LITPA_UTIL.escapeHtml(reg.materia) : "") +
+            "</small></div>";
+        }
+        const extra = [];
+        if (extraDia) {
+          if (reg.materia) extra.push(reg.materia);
+          if (reg.horario) extra.push(reg.horario);
+        }
+        if (reg.tema) extra.push("Tema: " + reg.tema);
+        if (reg.actividad) extra.push("Actividad: " + reg.actividad);
+        if (reg.tarea) extra.push("Tarea: " + reg.tarea);
+        if (reg.tipoIncidente || reg.incidente) extra.push("Incidente: " + [reg.tipoIncidente, reg.incidente].filter(Boolean).join(". "));
+        return '<div class="resumen-fila"><b>' + LITPA_UTIL.escapeHtml(reg.maestro) +
+          "</b><small>Entrada " + LITPA_UTIL.escapeHtml(LITPA_UTIL.horaCorta(reg.horaEntrada)) +
+          " · Envío " + LITPA_UTIL.escapeHtml(LITPA_UTIL.horaCorta(reg.horaEnvio)) +
+          (reg.curso ? " · " + LITPA_UTIL.escapeHtml(reg.curso) : "") +
+          "</small>" +
+          (extra.length ? "<small>" + LITPA_UTIL.escapeHtml(extra.join(" · ")) + "</small>" : "") +
+          "</div>";
+      }
+
+      function tarjetaResumen(g, esNueva) {
+        const maestros = new Set(g.registros.map(function (r) { return r.maestro; }).filter(Boolean));
+        const unificado = !!(g.esJornada || g.esSemana);
+        const clase = "card resumen" + (g.esSemana ? " resumen-semana" : "") + (esNueva ? " nueva" : "");
+        const titulo = g.esSemana
+          ? "Resumen de la semana"
+          : (g.esJornada
+            ? LITPA_UTIL.escapeHtml(g.materia)
+            : ("Resumen · " + LITPA_UTIL.escapeHtml(g.materia || "Clase") + (g.curso ? " · " + LITPA_UTIL.escapeHtml(g.curso) : "")));
+        let cuerpo;
+        if (g.esSemana) {
+          const porDia = {};
+          const orden = [];
+          g.registros.forEach(function (r) {
+            const dia = LITPA_UTIL.fechaCorta(r.fecha) || "Sin fecha";
+            if (!porDia[dia]) {
+              porDia[dia] = { manana: [], primaria: [] };
+              orden.push(dia);
+            }
+            const j = jornadaDeReg(r);
+            if (j === "primaria") porDia[dia].primaria.push(r);
+            else porDia[dia].manana.push(r);
+          });
+          cuerpo = orden.map(function (dia) {
+            const bloques = porDia[dia];
+            const nombre = diaDeFecha(dia) || "";
+            return '<div class="resumen-dia-bloque"><h3>' +
+              LITPA_UTIL.escapeHtml((nombre ? nombre + " · " : "") + dia) + "</h3>" +
+              (bloques.manana.length
+                ? '<p class="kicker">Mañana · ' + bloques.manana.length + " envío(s)</p>" +
+                  bloques.manana.map(function (r) { return filaResumen(r, true); }).join("")
+                : "") +
+              (bloques.primaria.length
+                ? '<p class="kicker">Primaria · ' + bloques.primaria.length + " envío(s)</p>" +
+                  bloques.primaria.map(function (r) { return filaResumen(r, true); }).join("")
+                : "") +
+              "</div>";
+          }).join("");
+        } else {
+          cuerpo = g.registros.map(function (r) { return filaResumen(r, unificado); }).join("");
+        }
+        return (
+          '<article class="' + clase + '">' +
+            '<div class="card-top">' +
+              "<h2>" + titulo + "</h2>" +
+              '<span class="badge">' + maestros.size + " maestro(s) · " + g.registros.length + " envío(s)</span>" +
+            "</div>" +
+            '<div class="datos">' +
+              dato("Fecha", g.fecha) +
+              dato("Periodo", g.horario || "—") +
+              dato("Incidentes", String(g.registros.filter(function (r) { return r.incidente || r.tipoIncidente; }).length)) +
+            "</div>" +
+            '<div class="resumen-lista">' + cuerpo + "</div>" +
+          "</article>"
+        );
+      }
+
+      function pintarFiltro() {
+        const actual = filtro.value;
+        const hoy = LITPA_UTIL.fechaCorta(fechaHoy());
+        const nombres = Array.from(new Set(registros.filter(function (r) {
+          return LITPA_UTIL.fechaCorta(r.fecha) === hoy;
+        }).map(function (r) { return r.maestro; }).filter(Boolean))).sort();
+        filtro.innerHTML = '<option value="">Todos</option>' + nombres.map(function (n) {
+          return '<option value="' + LITPA_UTIL.escapeHtml(n) + '"' + (n === actual ? " selected" : "") + ">" + LITPA_UTIL.escapeHtml(n) + "</option>";
+        }).join("");
+      }
+
+      function stats(vivos, resumenes) {
+        const hoy = LITPA_UTIL.fechaCorta(fechaHoy());
+        const maestros = new Set();
+        registros.forEach(function (r) {
+          if (LITPA_UTIL.fechaCorta(r.fecha) === hoy && r.maestro) maestros.add(r.maestro);
+        });
+        document.getElementById("stat-vivo").textContent = vivos.length;
+        document.getElementById("stat-resumen").textContent = resumenes.length;
+        document.getElementById("stat-maestros").textContent = maestros.size;
+      }
+
+      function render(forzar) {
+        const vistas = armarVistas();
+        const vivos = filtrarVivos(vistas.vivos);
+        const resumenes = filtrarResumenes(vistas.resumenes);
+        const sig = vivos.map(function (r) { return r.id; }).join("|") + "#" +
+          resumenes.map(function (g) { return g.clave + g.registros.length; }).join("|") +
+          "|" + filtro.value + "|" + buscar.value + "|" + tiposHoy().map(function (t) { return t + (jornadaCerrada(t) ? "c" : "a"); }).join("");
+        if (!forzar && sig === firma) return;
+
+        stats(vivos, resumenes);
+
+        if (!vivos.length) {
+          vivoBox.innerHTML = '<div class="card vacio">' + (hayJornadaCerrada()
+            ? "Ese periodo ya cerró. El recuento unificado está en Resumen."
+            : "Todavía no llega ninguna entrada en un horario abierto.") + "</div>";
+        } else {
+          const orden = vivos.slice().reverse();
+          vivoBox.innerHTML = vivos.map(function (r) {
+            const n = orden.findIndex(function (x) { return x.id === r.id; }) + 1;
+            return tarjetaViva(r, n, vistos.size > 0 && !vistos.has(r.id));
+          }).join("");
+        }
+
+        if (!resumenes.length) {
+          resumenBox.innerHTML = '<div class="card vacio">' + (hayJornadaCerrada()
+            ? "No hubo bitácoras en el periodo que ya cerró."
+            : "Cuando cierre cada clase se agrupa aquí. Al terminar la mañana, la primaria o el sábado, ese periodo se unifica. El viernes, al cerrar el día, sale el resumen de la semana.") + "</div>";
+        } else {
+          resumenBox.innerHTML = resumenes.map(function (g) {
+            const id = "resumen-" + g.clave;
+            return tarjetaResumen(g, vistos.size > 0 && !vistos.has(id));
+          }).join("");
+        }
+
+        vistos = new Set(vivos.map(function (r) { return r.id; }).concat(resumenes.map(function (g) { return "resumen-" + g.clave; })));
+        firma = sig;
+      }
+
+      function aplicarDatos(data) {
+        registros = (data.registros || []).filter(function (r) {
+          return LITPA_UTIL.fechaCorta(r.fecha) === LITPA_UTIL.fechaCorta(data.fecha || fechaHoy());
+        });
+        registrosSemana = data.registrosSemana || registros;
+        horarios = data.horarios || [];
+        reloj = {
+          fecha: data.fecha || "",
+          minutos: typeof data.minutos === "number" ? data.minutos : null,
+          dia: data.dia || ""
+        };
+        pintarFiltro();
+        render(true);
+      }
+
+      async function cargar() {
+        if (!LITPA.configurado()) {
+          meta.textContent = "Google Sheets no está conectado.";
+          return;
+        }
+        try {
+          const data = await LITPA.obtenerTablero(false);
+          aplicarDatos(data);
+          meta.textContent = (data.hora ? "Hora servidor " + data.hora + " · " : "") +
+            registros.length + " registro(s) · última lectura " + LITPA_UTIL.horaActual();
+          LITPA_UTIL.mostrarAviso(aviso, "");
+        } catch (err) {
+          if (!registros.length) {
+            LITPA_UTIL.mostrarAviso(aviso, "No se pudieron leer los registros.", "error");
+            meta.textContent = "Error al leer Google Sheets.";
+          }
+        }
+      }
+
+      filtro.addEventListener("change", function () { render(true); });
+      buscar.addEventListener("input", function () { render(true); });
+
+      const prev = LITPA.peek("tablero") || LITPA.peek("registros");
+      if (prev && (prev.registros || prev.ok)) aplicarDatos(prev);
+
+      LITPA_SPLASH.show({
+        titulo: "Tablero",
+        subtitulo: "Cargando los registros de hoy",
+        duration: 1200,
+        until: cargar()
+      }).then(function () {
+        document.getElementById("app").hidden = false;
+      });
+      setInterval(function () {
+        segs -= 1;
+        if (segs <= 0) {
+          segs = 5;
+          cargar();
+        }
+        cuenta.textContent = segs;
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
